@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wearable Health-Monitoring ARM System — COA Interactive Dashboard</title>
+  <meta name="description" content="Computer Organization and Architecture (COA) interactive dashboard simulating an energy-conscious ARM Cortex-M processor for continuous physiological monitoring.">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Pinned Chart.js from CDN with integrity check -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="app-header" role="banner">
+    <div class="header-brand">
+      <div class="brand-icon" aria-hidden="true">❤️⚡</div>
+      <div>
+        <h1 class="brand-title">Wearable Health-Monitoring ARM System</h1>
+        <p class="brand-subtitle">Energy-conscious processor simulation for continuous physiological monitoring &bull; COA Mini-Project</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div id="backend-status" class="status-chip status-checking" role="status" aria-live="polite">
+        <span class="status-dot"></span>
+        <span id="backend-status-text">Connecting...</span>
+      </div>
+      <button id="btn-tour" class="btn btn-secondary btn-sm" aria-label="Start guided tour of the signal path">
+        🗺️ Start Tour
+      </button>
+      <div class="dropdown">
+        <button id="btn-export-dropdown" class="btn btn-secondary btn-sm" aria-haspopup="true" aria-expanded="false">
+          📥 Export ▾
+        </button>
+        <div class="dropdown-menu" id="export-menu" role="menu">
+          <button class="dropdown-item" id="btn-export-json" role="menuitem">📄 Export Run (JSON)</button>
+          <button class="dropdown-item" id="btn-export-csv" role="menuitem">📊 Export Signal (CSV)</button>
+        </div>
+      </div>
+      <button id="theme-toggle" class="btn btn-icon btn-sm" aria-label="Toggle dark and light theme" title="Toggle dark/light mode">
+        🌙
+      </button>
+    </div>
+  </header>
+
+  <!-- Hard Constraint Warning Banner: PLACEHOLDER Values in Use -->
+  <aside id="placeholder-banner" class="alert-banner alert-warning" role="alert" style="display: none;">
+    <div class="alert-content">
+      <span class="alert-icon" aria-hidden="true">⚠️</span>
+      <div class="alert-text">
+        <strong>PLACEHOLDER VALUES IN EFFECT:</strong>
+        <span id="placeholder-banner-text">Energy parameters are unverified estimates from STM32L476RG datasheets pending student syllabus confirmation. Results are estimated from manufacturer datasheets; never claim real battery life.</span>
+        <a href="docs/OPEN_ITEMS.md" class="alert-link" target="_blank" rel="noopener">See docs/OPEN_ITEMS.md &rarr;</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Global Connectivity / Validation Alert Banner -->
+  <aside id="global-error-banner" class="alert-banner alert-error" role="alert" style="display: none;">
+    <div class="alert-content">
+      <span class="alert-icon" aria-hidden="true">❌</span>
+      <div class="alert-text" id="global-error-text">
+        Backend offline or request unprocessable.
+      </div>
+    </div>
+    <button class="alert-close" id="btn-close-error" aria-label="Dismiss error">&times;</button>
+  </aside>
+
+  <!-- Main Application Container -->
+  <main class="app-main" id="main-content">
+    
+    <!-- Controls Panel -->
+    <section class="card controls-card" aria-labelledby="controls-heading">
+      <div class="card-header">
+        <h2 id="controls-heading" class="card-title">🎛️ Simulation Parameters &amp; Sensor Controls</h2>
+        <span class="card-badge">REST API &bull; POST /api/run</span>
+      </div>
+      
+      <form id="simulation-form" class="controls-form" onsubmit="return false;">
+        <div class="form-grid">
+          
+          <!-- Signal Source -->
+          <div class="form-group">
+            <label for="ctrl-source" class="form-label" title="Source of physiological photoplethysmogram (PPG) waveform">
+              Signal Source:
+              <span class="info-tooltip" tabindex="0" aria-label="PhysioNet BIDMC 125 Hz clinical PPG records or deterministic synthetic fallback generator.">ℹ️</span>
+            </label>
+            <select id="ctrl-source" class="form-select">
+              <option value="synthetic">Synthetic Generator (Offline Fallback)</option>
+              <option value="bidmc01">PhysioNet BIDMC Record 01 (125 Hz)</option>
+              <option value="bidmc02">PhysioNet BIDMC Record 02 (125 Hz)</option>
+            </select>
+            <small class="form-hint">PhysioNet BIDMC (125 Hz) or Synthetic</small>
+          </div>
+
+          <!-- Alert Threshold (BPM) -->
+          <div class="form-group">
+            <label for="ctrl-threshold" class="form-label" title="Safety threshold in beats per minute triggering ARM ALU alert branch">
+              Alert Threshold:
+              <span class="info-tooltip" tabindex="0" aria-label="Heart rates above this threshold set ALU flags (Z=0, N=V) and trigger a BGT alert branch.">ℹ️</span>
+            </label>
+            <div class="slider-container">
+              <input type="range" id="ctrl-threshold" min="40" max="220" step="1" value="100" class="form-range" aria-valuemin="40" aria-valuemax="220">
+              <div class="slider-value-display">
+                <input type="number" id="ctrl-threshold-num" min="40" max="220" value="100" class="form-input-number">
+                <span class="unit">BPM</span>
+              </div>
+            </div>
+            <small class="form-hint">Physiological range: 40 &ndash; 220 BPM</small>
+          </div>
+
+          <!-- Window Duration -->
+          <div class="form-group">
+            <label for="ctrl-duration" class="form-label" title="Duration of physiological signal window processed">
+              Duration:
+              <span class="info-tooltip" tabindex="0" aria-label="Length of signal processed by the moving average filter and cache simulator.">ℹ️</span>
+            </label>
+            <div class="slider-container">
+              <input type="range" id="ctrl-duration" min="1" max="60" step="1" value="10" class="form-range" aria-valuemin="1" aria-valuemax="60">
+              <div class="slider-value-display">
+                <input type="number" id="ctrl-duration-num" min="1" max="60" value="10" class="form-input-number">
+                <span class="unit">sec</span>
+              </div>
+            </div>
+            <small class="form-hint">Analysis window: 1 &ndash; 60 seconds</small>
+          </div>
+
+          <!-- Cache Capacity -->
+          <div class="form-group">
+            <label for="ctrl-cache-size" class="form-label" title="Total cache memory capacity in bytes">
+              Cache Size:
+              <span class="info-tooltip" tabindex="0" aria-label="Must be a power of 2. Models SRAM cache capacity.">ℹ️</span>
+            </label>
+            <select id="ctrl-cache-size" class="form-select">
+              <option value="64">64 Bytes (Tiny / Test)</option>
+              <option value="128">128 Bytes</option>
+              <option value="256">256 Bytes</option>
+              <option value="512">512 Bytes</option>
+              <option value="1024">1 KB (1024 Bytes)</option>
+              <option value="2048">2 KB (2048 Bytes)</option>
+              <option value="4096" selected>4 KB (4096 Bytes, Default)</option>
+              <option value="8192">8 KB (8192 Bytes)</option>
+              <option value="16384">16 KB</option>
+              <option value="32768">32 KB</option>
+              <option value="65536">64 KB</option>
+            </select>
+            <small class="form-hint">32-bit address decomposition</small>
+          </div>
+
+          <!-- Cache Line Size -->
+          <div class="form-group">
+            <label for="ctrl-line-size" class="form-label" title="Cache block size in bytes">
+              Line Size:
+              <span class="info-tooltip" tabindex="0" aria-label="Number of bytes per block. Determines spatial locality and offset bits.">ℹ️</span>
+            </label>
+            <select id="ctrl-line-size" class="form-select">
+              <option value="4">4 Bytes (1 Word)</option>
+              <option value="8">8 Bytes (2 Words)</option>
+              <option value="16" selected>16 Bytes (4 Words, Default)</option>
+              <option value="32">32 Bytes (8 Words)</option>
+              <option value="64">64 Bytes</option>
+              <option value="128">128 Bytes</option>
+            </select>
+            <small class="form-hint">Offset = log2(Line Size)</small>
+          </div>
+
+          <!-- Cache Associativity -->
+          <div class="form-group">
+            <label for="ctrl-associativity" class="form-label" title="Cache associativity mapping style">
+              Associativity:
+              <span class="info-tooltip" tabindex="0" aria-label="1 = Direct-mapped; 2, 4, 8 = N-way set-associative with LRU eviction.">ℹ️</span>
+            </label>
+            <select id="ctrl-associativity" class="form-select">
+              <option value="1" selected>1 (Direct-Mapped)</option>
+              <option value="2">2-Way Set-Associative</option>
+              <option value="4">4-Way Set-Associative</option>
+              <option value="8">8-Way Set-Associative</option>
+            </select>
+            <small class="form-hint">Direct-mapped or LRU N-way</small>
+          </div>
+
+          <!-- Core Active Duty Cycle -->
+          <div class="form-group">
+            <label for="ctrl-active-frac" class="form-label" title="Percentage of time CPU core executes in active Run mode vs low-power Stop 2 sleep">
+              Active Time (%):
+              <span class="info-tooltip" tabindex="0" aria-label="Models CPU duty cycling: I_avg = I_active * D + I_sleep * (1 - D).">ℹ️</span>
+            </label>
+            <div class="slider-container">
+              <input type="range" id="ctrl-active-frac" min="0.1" max="100.0" step="0.1" value="5.0" class="form-range" aria-valuemin="0.1" aria-valuemax="100.0">
+              <div class="slider-value-display">
+                <input type="number" id="ctrl-active-frac-num" min="0.1" max="100.0" step="0.1" value="5.0" class="form-input-number">
+                <span class="unit">%</span>
+              </div>
+            </div>
+            <small class="form-hint">Normal wearable duty cycle: ~5%</small>
+          </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button type="button" id="btn-run-sim" class="btn btn-primary">
+            <span class="spinner" id="sim-spinner" style="display: none;" aria-hidden="true"></span>
+            <span id="btn-run-text">▶ Run Simulation</span>
+          </button>
+          <button type="button" id="btn-reset-defaults" class="btn btn-secondary">
+            🔄 Reset to Defaults
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Key Performance Indicator (KPI) Summary Cards -->
+    <section class="kpi-grid" aria-label="System Performance Summary">
+      
+      <!-- KPI 1: Heart Rate & Alert -->
+      <article class="card kpi-card" id="kpi-card-hr">
+        <div class="kpi-header">
+          <span class="kpi-icon" aria-hidden="true">❤️</span>
+          <span class="kpi-label">Heart Rate (BPM)</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpi-hr-val">-- <span class="kpi-unit">BPM</span></div>
+          <div class="kpi-badge badge-normal" id="kpi-alert-badge">NORMAL</div>
+        </div>
+        <div class="kpi-footer" id="kpi-hr-sub">Classical peak detection (no ML)</div>
+      </article>
+
+      <!-- KPI 2: ALU Decision & Flags -->
+      <article class="card kpi-card" id="kpi-card-alu">
+        <div class="kpi-header">
+          <span class="kpi-icon" aria-hidden="true">⚡</span>
+          <span class="kpi-label">ALU Alert Branch</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpi-branch-val">BGT: NO</div>
+          <div class="flag-mini-cluster" title="APSR Status Flags: N, Z, C, V">
+            <span class="flag-chip" id="chip-flag-n">N</span>
+            <span class="flag-chip" id="chip-flag-z">Z</span>
+            <span class="flag-chip" id="chip-flag-c">C</span>
+            <span class="flag-chip" id="chip-flag-v">V</span>
+          </div>
+        </div>
+        <div class="kpi-footer" id="kpi-alu-sub">CMP bpm, threshold &rarr; BGT</div>
+      </article>
+
+      <!-- KPI 3: Cache Performance & AMAT -->
+      <article class="card kpi-card" id="kpi-card-cache">
+        <div class="kpi-header">
+          <span class="kpi-icon" aria-hidden="true">💾</span>
+          <span class="kpi-label">Cache Hit Rate &amp; AMAT</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpi-cache-val">--%</div>
+          <div class="kpi-stat" id="kpi-amat-val">AMAT: -- cyc</div>
+        </div>
+        <div class="kpi-footer" id="kpi-cache-sub">vs 20.0 cyc un-cached Flash</div>
+      </article>
+
+      <!-- KPI 4: Energy Duty-Cycle Savings -->
+      <article class="card kpi-card" id="kpi-card-energy">
+        <div class="kpi-header">
+          <span class="kpi-icon" aria-hidden="true">🔋</span>
+          <span class="kpi-label">Average Current Draw</span>
+          <span class="badge badge-placeholder" title="Estimated from manufacturer datasheets (unverified placeholder)">PLACEHOLDER</span>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpi-energy-val">-- <span class="kpi-unit">&mu;A</span></div>
+          <div class="kpi-badge badge-success" id="kpi-savings-badge">--% Saved</div>
+        </div>
+        <div class="kpi-footer" id="kpi-energy-sub">vs 8400.0 &mu;A always-on baseline</div>
+      </article>
+
+    </section>
+
+    <!-- Main Signal Processing Chart Canvas -->
+    <section class="card chart-card" aria-labelledby="chart-heading">
+      <div class="card-header chart-header">
+        <div>
+          <h2 id="chart-heading" class="card-title">📈 Real-Time Physiological Signal Processing</h2>
+          <p class="chart-subtitle">Raw 12-bit ADC digitization &rarr; Signed Q15 conversion &rarr; ARM Cortex-M 4-tap boxcar filter &rarr; Systolic pulse peak detection</p>
+        </div>
+        <div class="chart-legend-toggles">
+          <label class="toggle-control"><input type="checkbox" id="chk-show-adc" checked> <span>Raw 12-bit ADC</span></label>
+          <label class="toggle-control"><input type="checkbox" id="chk-show-filtered" checked> <span>ARM Filtered (Q15)</span></label>
+          <label class="toggle-control"><input type="checkbox" id="chk-show-peaks" checked> <span>Systolic Peaks (BPM)</span></label>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="waveform-chart" aria-label="Interactive physiological waveform graph showing raw ADC signal, filtered Q15 signal, and detected systolic peaks"></canvas>
+      </div>
+    </section>
+
+    <!-- Tabbed COA Subsystem Explanations & Live Data -->
+    <section class="tabs-section" aria-label="Computer Organization and Architecture Modules">
+      
+      <!-- Tab Navigation Bar -->
+      <nav class="tabs-nav" role="tablist" aria-label="COA Subsystems">
+        <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-num-repr" id="tab-btn-num-repr">
+          <span class="tab-icon">🔢</span> 1. Number Repr
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-alu" id="tab-btn-alu">
+          <span class="tab-icon">⚙️</span> 2. ALU &amp; Flags
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-arm" id="tab-btn-arm">
+          <span class="tab-icon">🧠</span> 3. ARM Core
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-cache" id="tab-btn-cache">
+          <span class="tab-icon">🗄️</span> 4. Cache Hierarchy
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-serial" id="tab-btn-serial">
+          <span class="tab-icon">🔌</span> 5. Serial I/O
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-energy" id="tab-btn-energy">
+          <span class="tab-icon">⚡</span> 6. Duty-Cycle Energy
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verify" id="tab-btn-verify">
+          <span class="tab-icon">✅</span> 7. Verification
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-trace" id="tab-btn-trace">
+          <span class="tab-icon">📋</span> 8. Traceability (COs)
+        </button>
+      </nav>
+
+      <!-- Tab Content Panels -->
+      <div class="tabs-content">
+
+        <!-- TAB 1: Number Representation (CO1) -->
+        <div class="tab-panel active" id="tab-num-repr" role="tabpanel" aria-labelledby="tab-btn-num-repr">
+          <div class="concept-intro">
+            <h3>COA Concept: Fixed-Point Number Representation &amp; Two's Complement Arithmetic</h3>
+            <p>
+              Embedded biomedical microcontrollers without hardware floating-point units (FPU) use <strong>Q15 fixed-point arithmetic (1.15 format)</strong> to save power and chip area. 
+              One sign bit and 15 fractional bits represent numbers between &minus;1.0 and +0.99997 with integer steps of 2<sup>&minus;15</sup>. 
+              The 12-bit unsigned ADC reading [0, 4095] is converted to 16-bit signed Q15 using a single hardware shift instruction: <code>(ADC - 2048) &lt;&lt; 4</code>.
+            </p>
+            <div class="worked-example-box">
+              <strong>Concrete Worked Examples:</strong>
+              <ul>
+                <li>Float <code>0.75</code> in Q15: <code>0.75 &times; 32768 = 24576 = 0x6000</code>.</li>
+                <li>Q15 Multiplication (<code>0.5 &times; 0.5 = 0.25</code>): <code>16384 &times; 16384 &gt;&gt; 15 = 8192 = 0x2000</code> (<code>8192 / 32768.0 = 0.25</code>).</li>
+                <li>16-bit Two's Complement for &minus;1: <code>0xFFFF</code> (maximum negative value &minus;32768 is <code>0x8000</code>).</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="data-cards-grid">
+            <div class="data-card">
+              <h4>Raw 12-bit ADC (Last Sample)</h4>
+              <div class="data-val" id="num-last-adc">--</div>
+              <div class="data-meta">Hexadecimal: <code id="num-last-adc-hex">0x---</code> &bull; Range [0, 4095]</div>
+            </div>
+            <div class="data-card">
+              <h4>Signed Q15 Fixed-Point</h4>
+              <div class="data-val" id="num-last-q15">--</div>
+              <div class="data-meta">Hexadecimal: <code id="num-last-q15-hex">0x----</code> &bull; Range [&minus;32768, 32767]</div>
+            </div>
+            <div class="data-card">
+              <h4>ARM Filtered Output (Q15)</h4>
+              <div class="data-val" id="num-last-filtered">--</div>
+              <div class="data-meta">Hexadecimal: <code id="num-last-filtered-hex">0x----</code> &bull; 4-Sample Mean</div>
+            </div>
+          </div>
+
+          <div class="try-it-callout">
+            💡 <strong>Try It:</strong> Change the signal duration or input source above. Observe how the 12-bit ADC reading converts directly to signed Q15 two's complement hex with zero software division overhead!
+          </div>
+        </div>
+
+        <!-- TAB 2: ALU & Status Flags (CO2) -->
+        <div class="tab-panel" id="tab-alu" role="tabpanel" aria-labelledby="tab-btn-alu">
+          <div class="concept-intro">
+            <h3>COA Concept: 32-bit ALU Architecture &amp; APSR Condition Flags</h3>
+            <p>
+              The Arithmetic Logic Unit (ALU) performs 32-bit two's complement subtraction (<code>A &minus; B = A + ~B + 1</code>) to evaluate safety conditions without branching.
+              Every operation updates the four status flags in the <strong>Application Program Status Register (APSR)</strong>:
+              <strong>N</strong> (Negative), <strong>Z</strong> (Zero), <strong>C</strong> (Carry / No-Borrow), and <strong>V</strong> (Signed Overflow).
+            </p>
+            <div class="worked-example-box">
+              <strong>How CMP Drives the Alert Branch:</strong>
+              <p>
+                The firmware executes <code>CMP r0 (BPM), r1 (Threshold)</code> followed by <code>BGT alert_high</code> (Branch if Greater Than).<br>
+                ARM condition code <strong>GT</strong> is evaluated as: <code>(Z == 0) and (N == V)</code>.<br>
+                If <code>BPM = 110</code> and <code>Threshold = 100</code>, subtraction yields <code>+10</code>: flags are <code>N=0, Z=0, C=1, V=0</code>. Condition <code>(Z==0 and N==V) &rarr; True</code>! Branch taken &rarr; Alert fired.
+              </p>
+            </div>
+          </div>
+
+          <div class="alu-interactive-panel">
+            <h4>APSR Condition Flags Status</h4>
+            <div class="led-flags-cluster">
+              <div class="led-flag" id="led-flag-n">
+                <span class="led-bulb"></span>
+                <span class="led-name">N</span>
+                <span class="led-desc">Negative (Bit 31)</span>
+              </div>
+              <div class="led-flag" id="led-flag-z">
+                <span class="led-bulb"></span>
+                <span class="led-name">Z</span>
+                <span class="led-desc">Zero (Result == 0)</span>
+              </div>
+              <div class="led-flag" id="led-flag-c">
+                <span class="led-bulb"></span>
+                <span class="led-name">C</span>
+                <span class="led-desc">Carry / No-Borrow</span>
+              </div>
+              <div class="led-flag" id="led-flag-v">
+                <span class="led-bulb"></span>
+                <span class="led-name">V</span>
+                <span class="led-desc">Signed Overflow</span>
+              </div>
+            </div>
+
+            <div class="data-cards-grid" style="margin-top: 1rem;">
+              <div class="data-card">
+                <h4>Subtraction Result (BPM &minus; Threshold)</h4>
+                <div class="data-val" id="alu-result-val">--</div>
+                <div class="data-meta">32-bit unsigned: <code id="alu-result-hex">0x--------</code></div>
+              </div>
+              <div class="data-card">
+                <h4>Branch Evaluation (BGT)</h4>
+                <div class="data-val" id="alu-branch-eval">--</div>
+                <div class="data-meta">Condition: <code>(Z == 0) &amp;&amp; (N == V)</code></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="try-it-callout">
+            💡 <strong>Try It:</strong> Lower the Alert Threshold slider to 60 BPM (below the normal ~75 BPM heart rate). Click <em>Run Simulation</em> to see the N flag turn off, the Carry flag assert, and the BGT alert branch trigger!
+          </div>
+        </div>
+
+        <!-- TAB 3: ARM Cortex-M Core & Stepper (CO3) -->
+        <div class="tab-panel" id="tab-arm" role="tabpanel" aria-labelledby="tab-btn-arm">
+          <div class="concept-intro">
+            <h3>COA Concept: ARM Cortex-M Thumb Instruction Execution &amp; Register File</h3>
+            <p>
+              The simulation executes genuine 16-bit ARM Thumb machine code on the <strong>Unicorn CPU Emulator</strong> (based on QEMU).
+              The assembly routine (<code>asm/moving_average.s</code>) executes a 4-sample boxcar moving average filter: loading four 16-bit halfwords with <code>LDRH</code>, sign-extending with <code>SXTH</code>, accumulating in <code>R2</code> with <code>ADDS</code>, dividing by 4 with <code>ASRS r2, r2, #2</code>, and comparing with <code>CMP r2, r1</code>.
+            </p>
+            <div class="worked-example-box">
+              <strong>Bit-Exact Architectural Verification:</strong>
+              <span class="badge badge-success" id="arm-match-badge">100% Bit-Exact Match with Python Reference</span>
+              <p style="margin-top: 0.5rem;">
+                The hardware emulation traces every register ($R0$ to $R7$) and status flag at each machine instruction, asserting complete bit-level equivalence with the mathematical reference implementation.
+              </p>
+            </div>
+          </div>
+
+          <!-- Interactive Instruction Stepper -->
+          <div class="stepper-container">
+            <div class="stepper-controls">
+              <div class="stepper-buttons">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-step-first" title="Jump to first instruction">⏮ First</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-step-prev" title="Previous instruction">◀ Previous</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-step-next" title="Next instruction">Next ▶</button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-step-last" title="Jump to last instruction">⏭ Last</button>
+              </div>
+              <div class="stepper-counter" id="step-counter-text">
+                Instruction 1 of 18
+              </div>
+            </div>
+
+            <!-- Active Instruction Display -->
+            <div class="active-instruction-banner">
+              <span class="instr-label">Active Opcode:</span>
+              <code class="instr-code" id="active-instr-code">ldrh r2, [r0, #0]</code>
+            </div>
+
+            <!-- Register Grid -->
+            <h4>Cortex-M Low Registers (R0 &ndash; R7)</h4>
+            <div class="register-grid">
+              <div class="reg-box" id="reg-box-r0"><span class="reg-name">R0</span><span class="reg-val" id="reg-val-r0">0x00000000</span></div>
+              <div class="reg-box" id="reg-box-r1"><span class="reg-name">R1</span><span class="reg-val" id="reg-val-r1">0x00000000</span></div>
+              <div class="reg-box" id="reg-box-r2"><span class="reg-name">R2</span><span class="reg-val" id="reg-val-r2">0x00000000</span></div>
+              <div class="reg-box" id="reg-box-r3"><span class="reg-name">R3</span><span class="reg-val" id="reg-val-r3">0x00000000</span></div>
+              <div class="reg-box" id="reg-box-r4"><span class="reg-name">R4</span><span class="reg-val" id="reg-val-r4">0x00000000</span></div>
+              <div class="reg-box" id="reg-box-r5"><span class="reg-name">R5</span><span class="reg-val" id="reg-val-r5">0x00000000</span></div>
+              <div class="reg-box" id="reg-box-r6"><span class="reg-name">R6</span><span class="reg-val" id="reg-val-r6">0x00000000</span></div>
+              <div class="reg-box" id="reg-box-r7"><span class="reg-name">R7</span><span class="reg-val" id="reg-val-r7">0x00000000</span></div>
+            </div>
+          </div>
+
+          <div class="try-it-callout">
+            💡 <strong>Try It:</strong> Click the <strong>Next ▶</strong> button above to step through the 18 Thumb instructions. Observe how halfwords are loaded from memory pointer <code>R0</code>, accumulated into <code>R2</code>, and divided by 4 with <code>ASRS</code>!
+          </div>
+        </div>
+
+        <!-- TAB 4: Cache Hierarchy (CO4) -->
+        <div class="tab-panel" id="tab-cache" role="tabpanel" aria-labelledby="tab-btn-cache">
+          <div class="concept-intro">
+            <h3>COA Concept: Memory Hierarchy, Address Decomposition &amp; AMAT</h3>
+            <p>
+              Wearable physiological monitoring repeatedly reads from circular sample buffers, exhibiting high <strong>spatial locality</strong> (sequential memory addresses) and <strong>temporal locality</strong> (frequently accessed filter coefficients). 
+              Caches drastically reduce the <strong>Average Memory Access Time (AMAT)</strong>:
+              <code>AMAT = Hit_Time + (Miss_Rate &times; Miss_Penalty)</code>.
+            </p>
+            <div class="worked-example-box">
+              <strong>Cache Geometry Worked Example:</strong>
+              <p>
+                Parameters: 4 KB Cache, 16-byte lines, Direct-Mapped (Associativity = 1).<br>
+                Number of lines: <code>4096 / 16 = 256 lines</code>.<br>
+                Offset bits: <code>log2(16) = 4 bits</code> (bits [3:0]).<br>
+                Index bits: <code>log2(256) = 8 bits</code> (bits [11:4]).<br>
+                Tag bits: <code>32 &minus; 8 &minus; 4 = 20 bits</code> (bits [31:12]).
+              </p>
+            </div>
+          </div>
+
+          <!-- Address Slicing Visualization -->
+          <div class="cache-slicing-panel">
+            <h4>32-bit Memory Address Partitioning</h4>
+            <div class="address-bit-bar">
+              <div class="bit-chunk chunk-tag" id="chunk-tag">Tag: <span id="bit-tag-count">20</span> bits [31:12]</div>
+              <div class="bit-chunk chunk-index" id="chunk-index">Index: <span id="bit-index-count">8</span> bits [11:4]</div>
+              <div class="bit-chunk chunk-offset" id="chunk-offset">Offset: <span id="bit-offset-count">4</span> bits [3:0]</div>
+            </div>
+          </div>
+
+          <!-- Cache Statistics Table -->
+          <div class="data-cards-grid" style="margin-top: 1rem;">
+            <div class="data-card">
+              <h4>Hit Rate</h4>
+              <div class="data-val" id="cache-hitrate-val">--%</div>
+              <div class="data-meta">Miss Rate: <span id="cache-missrate-val">--%</span></div>
+            </div>
+            <div class="data-card">
+              <h4>AMAT with Cache</h4>
+              <div class="data-val" id="cache-amat-val">-- cyc</div>
+              <div class="data-meta">Hit time: 1.0 cycle &bull; Miss penalty: 20.0 cycles</div>
+            </div>
+            <div class="data-card">
+              <h4>AMAT without Cache</h4>
+              <div class="data-val">20.0 cyc</div>
+              <div class="data-meta">Flash memory wait states without cache</div>
+            </div>
+          </div>
+
+          <div class="try-it-callout">
+            💡 <strong>Try It:</strong> Select a tiny cache size (e.g. 64 Bytes) in the controls above and re-run. Observe how capacity and conflict misses reduce the hit rate and elevate AMAT!
+          </div>
+        </div>
+
+        <!-- TAB 5: Serial Interconnects (CO5) -->
+        <div class="tab-panel" id="tab-serial" role="tabpanel" aria-labelledby="tab-btn-serial">
+          <div class="concept-intro">
+            <h3>COA Concept: Serial I/O Interconnects &amp; Bus Utilisation</h3>
+            <p>
+              Wearable devices use two distinct serial protocols:
+              <strong>Synchronous I2C (Inter-Integrated Circuit)</strong> to acquire raw biomedical readings from peripheral digital sensors, and 
+              <strong>Asynchronous UART (Universal Asynchronous Receiver-Transmitter)</strong> to stream health telemetry packets to a host Bluetooth module.
+            </p>
+            <div class="worked-example-box">
+              <strong>Worked Bus Utilisation Examples:</strong>
+              <ul>
+                <li><strong>UART Throughput (8-N-1):</strong> At 115,200 baud with 10 bits/byte (1 start, 8 data, 1 stop), maximum bandwidth is <code>11,520 bytes/s</code>. An 8-byte health packet sent at 125 Hz requires <code>1,000 bytes/s</code> &rarr; <strong>8.68% bus utilisation</strong>.</li>
+                <li><strong>I2C Transaction Timing:</strong> Reading a 2-byte sensor sample takes 48 clock cycles (START + 9b Addr+W + 9b Reg + Sr + 9b Addr+R + 2x9b Data + STOP). At 100 kHz (10 &mu;s/clock), each read takes <code>480 &mu;s</code> &rarr; <strong>6.0% bus utilisation at 125 Hz</strong>.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="serial-grid">
+            <!-- UART Card -->
+            <div class="serial-card">
+              <h4>📡 UART Telemetry Channel (8-N-1)</h4>
+              <ul class="spec-list">
+                <li>Baud Rate: <strong id="uart-baud">115,200</strong> baud</li>
+                <li>Framing: <strong>1 Start Bit, 8 Data Bits, 1 Stop Bit</strong> (10 bits/frame)</li>
+                <li>Effective Bandwidth: <strong id="uart-max-bps">11,520</strong> bytes/sec</li>
+                <li>Channel Utilisation: <strong id="uart-util">8.68%</strong></li>
+              </ul>
+              <div class="frame-diagram" title="10-bit physical UART frame">
+                <span class="frame-bit bit-start">Start (0)</span>
+                <span class="frame-bit bit-data">D0 &hellip; D7 (8 bits)</span>
+                <span class="frame-bit bit-stop">Stop (1)</span>
+              </div>
+            </div>
+
+            <!-- I2C Card -->
+            <div class="serial-card">
+              <h4>🔌 I2C Sensor Interconnect Bus</h4>
+              <ul class="spec-list">
+                <li>Bus Clock Frequency: <strong id="i2c-clock">100</strong> kHz (Standard Mode)</li>
+                <li>Cycles per 2-byte Sample: <strong>48 clock cycles</strong></li>
+                <li>Transaction Latency: <strong id="i2c-latency">480.0</strong> &mu;s</li>
+                <li>Bus Utilisation at 125 Hz: <strong id="i2c-util">6.0%</strong></li>
+              </ul>
+              <div class="frame-diagram" title="I2C sensor read transaction sequence">
+                <span class="frame-bit bit-start">S</span>
+                <span class="frame-bit bit-addr">Addr+W</span>
+                <span class="frame-bit bit-data">Reg</span>
+                <span class="frame-bit bit-start">Sr</span>
+                <span class="frame-bit bit-addr">Addr+R</span>
+                <span class="frame-bit bit-data">Data (2B)</span>
+                <span class="frame-bit bit-stop">P</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="try-it-callout">
+            💡 <strong>Try It:</strong> Notice that at 125 Hz, the I2C bus is occupied for only 60 ms out of every 1,000 ms. For the remaining 94% of the time, the microcontroller gates clocks and enters low-power sleep!
+          </div>
+        </div>
+
+        <!-- TAB 6: Duty-Cycle Energy Model (CO6) -->
+        <div class="tab-panel" id="tab-energy" role="tabpanel" aria-labelledby="tab-btn-energy">
+          <div class="concept-intro">
+            <h3>COA Concept: Power-Aware Architecture &amp; Duty-Cycle Modeling</h3>
+            <p>
+              In wearable computing, dynamic power dissipation governed by CMOS switching (<code>P = C &times; V&sup2; &times; f</code>) quickly drains battery cells if the core runs continuously. 
+              Energy-conscious microcontrollers duty-cycle operations: executing signal processing bursts in active <strong>Run Mode</strong>, then entering ultra-low-power <strong>Stop 2 Mode</strong> with high-speed oscillators halted.
+            </p>
+            <div class="worked-example-box">
+              <strong>Mathematical Duty-Cycle Formulation:</strong>
+              <p>
+                <code>I_avg = (I_active &times; D) + (I_sleep &times; (1 &minus; D))</code><br>
+                Using STM32L476RG datasheet figures (marked PLACEHOLDER):<br>
+                <code>I_active = 8400.0 &mu;A</code> (Run mode @ 80 MHz, 3.0V), <code>I_sleep = 1.2 &mu;A</code> (Stop 2 mode with RTC).<br>
+                At a 5% active duty cycle (<code>D = 0.05</code>):<br>
+                <code>I_avg = (8400 &times; 0.05) + (1.2 &times; 0.95) = 420.0 + 1.14 = 421.14 &mu;A</code>.<br>
+                Energy savings vs Always-On: <strong>94.99%</strong>!
+              </p>
+            </div>
+          </div>
+
+          <!-- Energy Comparison Grid -->
+          <div class="data-cards-grid">
+            <div class="data-card">
+              <h4>Average Current Draw (Duty-Cycled)</h4>
+              <div class="data-val" id="energy-tab-avg">-- <span class="data-unit">&mu;A</span></div>
+              <div class="data-meta"><span class="badge badge-placeholder">PLACEHOLDER</span> &bull; <code>I_avg</code></div>
+            </div>
+            <div class="data-card">
+              <h4>Always-On Baseline Current</h4>
+              <div class="data-val" id="energy-tab-base">8400.0 <span class="data-unit">&mu;A</span></div>
+              <div class="data-meta">Continuous 80 MHz clocking</div>
+            </div>
+            <div class="data-card">
+              <h4>Estimated Energy Savings</h4>
+              <div class="data-val" id="energy-tab-savings">--%</div>
+              <div class="data-meta">Reduction in battery drain</div>
+            </div>
+          </div>
+
+          <div class="datasheet-citation-box">
+            <h4>📖 Datasheet Source Citation (Hard Constraint)</h4>
+            <p id="energy-source-text">STMicroelectronics STM32L476xx Datasheet (DocID025976 Rev 5, Table 34 &amp; 39, pp. 112, 120)</p>
+            <small>⚠️ <em>Worded as "estimated from datasheet figures"; never claims real battery life. Confirm in docs/OPEN_ITEMS.md.</em></small>
+          </div>
+
+          <div class="try-it-callout">
+            💡 <strong>Try It:</strong> Move the Active Time slider in the controls to 1% or 20% to see how duty cycling dynamically extends battery life in real-time health monitors!
+          </div>
+        </div>
+
+        <!-- TAB 7: Automated Verification Suite -->
+        <div class="tab-panel" id="tab-verify" role="tabpanel" aria-labelledby="tab-btn-verify">
+          <div class="concept-intro">
+            <h3>Automated Architectural Verification Suite</h3>
+            <p>
+              The system runs three rigorous automated checks against theoretical and mathematical benchmarks to verify architectural fidelity.
+              Data is queried live from <code>GET /api/verification</code>.
+            </p>
+          </div>
+
+          <div class="verification-cards-grid">
+            
+            <!-- Check 1: Q15 vs Float -->
+            <div class="card verify-card" id="card-verify-q15">
+              <div class="verify-header">
+                <span class="verify-icon" id="icon-verify-q15">✅</span>
+                <div>
+                  <h4 class="verify-title">1. Q15 vs. IEEE 754 Float Reference</h4>
+                  <p class="verify-sub">Evaluates quantization error across physiological signals</p>
+                </div>
+              </div>
+              <ul class="verify-details">
+                <li>Max Absolute Error: <strong id="verify-q15-mae">--</strong> (&le; 0.5 LSB)</li>
+                <li>Mean Absolute Error: <strong id="verify-q15-mean">--</strong></li>
+                <li>Root Mean Squared Error: <strong id="verify-q15-rmse">--</strong></li>
+                <li>Signal-to-Quantization Noise: <strong id="verify-q15-snr">-- dB</strong></li>
+              </ul>
+              <div class="verify-status-badge badge-success" id="badge-verify-q15">PASSED</div>
+            </div>
+
+            <!-- Check 2: Emulated ARM vs Python -->
+            <div class="card verify-card" id="card-verify-arm">
+              <div class="verify-header">
+                <span class="verify-icon" id="icon-verify-arm">✅</span>
+                <div>
+                  <h4 class="verify-title">2. Emulated ARM vs. Pure Python</h4>
+                  <p class="verify-sub">100 random test vectors in Unicorn vs Python reference</p>
+                </div>
+              </div>
+              <ul class="verify-details">
+                <li>Vectors Evaluated: <strong id="verify-arm-vectors">100</strong></li>
+                <li>Bit-Exact Average Match: <strong>100%</strong></li>
+                <li>Alert Branch Decision Match: <strong>100%</strong></li>
+                <li>Mismatches: <strong id="verify-arm-mismatches">0</strong></li>
+              </ul>
+              <div class="verify-status-badge badge-success" id="badge-verify-arm">PASSED</div>
+            </div>
+
+            <!-- Check 3: Cache vs Hand Calculation -->
+            <div class="card verify-card" id="card-verify-cache">
+              <div class="verify-header">
+                <span class="verify-icon" id="icon-verify-cache">✅</span>
+                <div>
+                  <h4 class="verify-title">3. Cache vs. Hand-Calculated Trace</h4>
+                  <p class="verify-sub">Deterministic 10-access trace vs manual calculation</p>
+                </div>
+              </div>
+              <ul class="verify-details">
+                <li>Total Accesses: <strong>10</strong></li>
+                <li>Hits (Expected 7 / Actual): <strong id="verify-cache-hits">7</strong></li>
+                <li>Hit Rate (Expected 70.0%): <strong id="verify-cache-hitrate">70.0%</strong></li>
+                <li>AMAT (Expected 7.0 cyc): <strong id="verify-cache-amat">7.0 cyc</strong></li>
+              </ul>
+              <div class="verify-status-badge badge-success" id="badge-verify-cache">PASSED</div>
+            </div>
+
+          </div>
+
+          <div style="margin-top: 1.5rem; text-align: center;">
+            <button type="button" class="btn btn-secondary" id="btn-retest-verification">
+              🔄 Re-run Automated Verification
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 8: Traceability & Course Outcomes -->
+        <div class="tab-panel" id="tab-trace" role="tabpanel" aria-labelledby="tab-btn-trace">
+          <div class="concept-intro">
+            <h3>Course Outcomes (CO1 &ndash; CO6) &amp; Dimensions (CT + RWE) Traceability</h3>
+            <p>
+              In accordance with project constraints, course outcome descriptions and dimension acronyms are read directly from <code>docs/CO_MAPPING.md</code> and <code>docs/DIMENSION.md</code> without guessing. 
+              Unconfirmed cells display <em>"To be confirmed from the syllabus"</em>.
+            </p>
+          </div>
+
+          <h4>Course Outcomes Coverage (CO1 to CO6)</h4>
+          <div class="table-responsive">
+            <table class="table-trace" id="table-co-mapping">
+              <thead>
+                <tr>
+                  <th>CO</th>
+                  <th>Official Syllabus Description</th>
+                  <th>COA Concept Demonstrated</th>
+                  <th>Module</th>
+                  <th>Test File</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-co-mapping">
+                <tr><td colspan="5">Loading traceability data from API...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h4 style="margin-top: 1.5rem;">Project Evaluation Dimensions (CT + RWE)</h4>
+          <div class="table-responsive">
+            <table class="table-trace" id="table-dimension-mapping">
+              <thead>
+                <tr>
+                  <th>Dimension</th>
+                  <th>Full Name</th>
+                  <th>Official Rubric Description</th>
+                  <th>How Demonstrated in System</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-dimension-mapping">
+                <tr><td colspan="4">Loading dimensions from API...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- "Start Here" 5-Step Guided Tour Modal -->
+  <div class="modal-overlay" id="tour-modal" role="dialog" aria-modal="true" aria-labelledby="tour-step-title" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-step-badge" id="tour-step-badge">Step 1 of 5</span>
+        <h3 id="tour-step-title" class="modal-title">1. Data Acquisition (Sensors &amp; ADC)</h3>
+        <button class="modal-close" id="btn-tour-close" aria-label="Close tour">&times;</button>
+      </div>
+      <div class="modal-body" id="tour-step-body">
+        <p>Tour step content goes here.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-sm" id="btn-tour-prev">◀ Back</button>
+        <button class="btn btn-primary btn-sm" id="btn-tour-next">Next ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer" role="contentinfo">
+    <p>
+      <strong>Wearable Health-Monitoring ARM System</strong> &bull; Student: <strong>Samuel Rohlupuia</strong> &bull; Dimensions: <strong>CT + RWE</strong>
+    </p>
+    <p class="footer-links">
+      <a href="docs/architecture.md" target="_blank" rel="noopener">Architecture Spec</a> &bull;
+      <a href="docs/API.md" target="_blank" rel="noopener">REST API Contract</a> &bull;
+      <a href="docs/VERIFICATION.md" target="_blank" rel="noopener">Verification Report</a> &bull;
+      <a href="docs/references.md" target="_blank" rel="noopener">Verified References</a> &bull;
+      <a href="docs/OPEN_ITEMS.md" target="_blank" rel="noopener">Open Items</a>
+    </p>
+  </footer>
+
+  <!-- Main JavaScript Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

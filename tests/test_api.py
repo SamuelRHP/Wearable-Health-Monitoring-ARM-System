@@ -146,3 +146,26 @@ def test_api_traceability(client):
     assert "To be confirmed from the syllabus" in first_co["Official Syllabus Description"]
 
 
+def test_api_frontend_static_serving(client):
+    """Verify that the frontend files (HTML, CSS, JS) are properly mounted and served."""
+    # Test index.html served at root
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers.get("content-type", "")
+    assert "Wearable Health-Monitoring ARM System" in resp.text
+    assert "id=\"waveform-chart\"" in resp.text
+
+    # Test styles.css
+    resp_css = client.get("/styles.css")
+    assert resp_css.status_code == 200
+    assert "text/css" in resp_css.headers.get("content-type", "")
+    assert "--accent-blue" in resp_css.text
+
+    # Test app.js
+    resp_js = client.get("/app.js")
+    assert resp_js.status_code == 200
+    assert "javascript" in resp_js.headers.get("content-type", "")
+    assert "runSimulation" in resp_js.text
+
+
+
