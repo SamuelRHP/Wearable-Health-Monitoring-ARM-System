@@ -1168,3 +1168,4 @@ function applyTheme(theme) {
 // ============================================================================
 
 document.addEventListener("DOMContentLoaded", initializeApp);
+

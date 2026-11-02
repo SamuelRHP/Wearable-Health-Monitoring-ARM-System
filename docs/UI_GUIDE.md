@@ -182,3 +182,4 @@ Before demoing or submitting the project, verify all items on this checklist:
 | **TC-14** | **Placeholder Banner Check** | Verify presence of `⚠️ PLACEHOLDER VALUES IN EFFECT` banner at top of page and next to Energy KPI. | Banner is visible and contains working link to `docs/OPEN_ITEMS.md`. | [ ] |
 | **TC-15** | **Keyboard Navigability** | Use `Tab`, `Shift+Tab`, and `Enter`/`Space` to navigate without mouse. | All buttons, tabs, sliders, and controls display visible `:focus-visible` outlines and operate smoothly. | [ ] |
 | **TC-16** | **Traceability Check** | Select *Tab 8: Traceability*. | Tables render CO1–CO6 and Dimensions; unconfirmed cells display `"To be confirmed from the syllabus"`. | [ ] |
+
