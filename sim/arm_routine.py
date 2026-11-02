@@ -138,6 +138,9 @@ class ARMEmulator:
         if len(samples) != 4:
             raise ValueError(f"Expected 4 samples, got {len(samples)}")
 
+        # Flush JIT translation block cache so code hooks fire reliably
+        self.mu.ctl_flush_tb()
+
         # Write samples to data memory
         packed = struct.pack("<4h", *samples)
         self.mu.mem_write(DATA_BASE_ADDR, packed)
