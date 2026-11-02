@@ -289,6 +289,48 @@ def get_verification() -> dict[str, Any]:
     }
 
 
+DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
+
+
+def _parse_markdown_table(file_path: Path) -> list[dict[str, str]]:
+    """Parse a Markdown table into a list of row dictionaries."""
+    if not file_path.exists():
+        return []
+    lines = [
+        line.strip()
+        for line in file_path.read_text(encoding="utf-8").splitlines()
+        if line.strip().startswith("|")
+    ]
+    if len(lines) < 3:
+        return []
+    headers = [h.strip() for h in lines[0].strip("|").split("|")]
+    rows = []
+    for line in lines[2:]:
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        row = {}
+        for h, c in zip(headers, cells):
+            clean_c = c.replace("`[PASTE FROM SYLLABUS]`", "To be confirmed from the syllabus")
+            clean_c = clean_c.replace("[PASTE FROM SYLLABUS]", "To be confirmed from the syllabus")
+            clean_c = clean_c.replace("**", "")
+            row[h] = clean_c
+        rows.append(row)
+    return rows
+
+
+@app.get("/api/traceability")
+def get_traceability() -> dict[str, Any]:
+    """Return course outcomes and dimension mapping parsed from docs/CO_MAPPING.md and docs/DIMENSION.md."""
+    co_rows = _parse_markdown_table(DOCS_DIR / "CO_MAPPING.md")
+    dim_rows = _parse_markdown_table(DOCS_DIR / "DIMENSION.md")
+    return {
+        "course_outcomes": co_rows,
+        "dimensions": dim_rows,
+        "co_file": "docs/CO_MAPPING.md",
+        "dim_file": "docs/DIMENSION.md",
+    }
+
+
 # Mount frontend static directory if present
 if FRONTEND_DIR.exists() and any(FRONTEND_DIR.iterdir()):
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+

@@ -130,3 +130,19 @@ def test_api_verification(client):
     assert checks["q15_vs_float"]["passed"] is True
     assert checks["arm_vs_python"]["passed"] is True
     assert checks["cache_vs_hand_calc"]["passed"] is True
+
+
+def test_api_traceability(client):
+    """Verify GET /api/traceability returns parsed CO mapping and dimensions."""
+    resp = client.get("/api/traceability")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "course_outcomes" in data
+    assert "dimensions" in data
+    assert len(data["course_outcomes"]) == 6
+    assert len(data["dimensions"]) == 2
+    # Verify placeholder replacement
+    first_co = data["course_outcomes"][0]
+    assert "To be confirmed from the syllabus" in first_co["Official Syllabus Description"]
+
+

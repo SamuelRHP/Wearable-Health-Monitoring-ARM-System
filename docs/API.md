@@ -238,3 +238,40 @@ Query the 3 automated architectural verification suites.
   }
 }
 ```
+
+---
+
+## 6. Course Traceability & Dimension Mapping
+Retrieve parsed Course Outcomes (CO1-CO6) and dimension tracking from `docs/CO_MAPPING.md` and `docs/DIMENSION.md`. If unconfirmed by student, descriptions default to `"To be confirmed from the syllabus"`.
+
+- **Method:** `GET`
+- **Path:** `/api/traceability`
+- **Response `200 OK`:**
+```json
+{
+  "course_outcomes": [
+    {
+      "Course Outcome": "CO1",
+      "Official Syllabus Description": "To be confirmed from the syllabus",
+      "COA Concept Demonstrated": "Data Representation & Computer Arithmetic...",
+      "Implementation Module": "`sim/q15.py`",
+      "Automated Test File": "`tests/test_q15.py`",
+      "Proposed UI Tab (Frontend)": "*Tab 1: Number Representation*",
+      "Student Confirmation": "[ ] Pending Confirmation"
+    }
+  ],
+  "dimensions": [
+    {
+      "Dimension": "CT",
+      "Full Name": "To be confirmed from the syllabus",
+      "Official Rubric Description": "To be confirmed from the syllabus",
+      "How Demonstrated in Project": "Decomposition & Algorithmic Rigor...",
+      "Primary Modules & Verification": "`sim/q15.py`...",
+      "Student Confirmation": "[ ] Pending Confirmation"
+    }
+  ],
+  "co_file": "docs/CO_MAPPING.md",
+  "dim_file": "docs/DIMENSION.md"
+}
+```
+
