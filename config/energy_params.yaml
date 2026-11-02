@@ -1,0 +1,24 @@
+# Energy Model Parameters for ARM Cortex-M Wearable Health System
+#
+# HARD CONSTRAINTS:
+# 1. All placeholder values must be labeled PLACEHOLDER and live in this config file.
+# 2. Every placeholder triggers a visible warning in every report and API response.
+# 3. Results are worded as "estimated from datasheet figures"; never claim real battery life.
+
+is_placeholder: true
+placeholder_warning: "WARNING: Energy parameters are unverified PLACEHOLDER values pending datasheet confirmation by student (see docs/OPEN_ITEMS.md). Results are estimated from manufacturer datasheets; never claim real battery life."
+
+target_mcu: "STM32L476RG"
+
+source:
+  name: "STMicroelectronics STM32L476xx Datasheet (DocID025976 Rev 5)"
+  url: "https://www.st.com/resource/en/datasheet/stm32l476rg.pdf"
+  section: "Table 34 & Table 39. Current consumption in Run and Stop 2 modes"
+  page: "112, 120"
+  status: "PLACEHOLDER"
+
+parameters:
+  active_current_ua: 8400.0       # 8.4 mA (8400 uA) in Run mode at 80 MHz, VDD = 3.0V (PLACEHOLDER)
+  sleep_current_ua: 1.2           # 1.2 uA in Stop 2 low-power mode with RTC, VDD = 3.0V (PLACEHOLDER)
+  operating_voltage_v: 3.0        # 3.0 Volts supply voltage (PLACEHOLDER)
+  default_active_fraction: 0.05   # 5% duty cycle in continuous physiological monitoring (PLACEHOLDER)

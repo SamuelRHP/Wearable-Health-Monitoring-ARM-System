@@ -1,0 +1,49 @@
+# Default Simulation Configuration & Validation Bounds
+# Wearable Health-Monitoring ARM System
+
+simulation:
+  source: "synthetic"             # Default signal source ("bidmc01", "bidmc02", "synthetic")
+  duration_s: 10.0                # Duration of processed window in seconds
+  fs_hz: 125.0                    # Standard sampling frequency (matches PhysioNet BIDMC 125 Hz)
+  threshold_bpm: 100.0            # Alert threshold for tachycardia in beats per minute
+
+cache:
+  cache_size_bytes: 4096          # 4 KB cache
+  line_size_bytes: 16             # 16-byte cache line
+  associativity: 1                # 1 = Direct-Mapped (or 2, 4 for set-associative)
+  hit_time_cycles: 1.0            # SRAM access latency
+  miss_penalty_cycles: 20.0       # Flash wait-state miss penalty
+
+serial:
+  uart_baud: 115200               # 115200 baud UART link to companion device
+  uart_packet_bytes: 8            # 8-byte health telemetry packet
+  i2c_clock_hz: 100000            # 100 kHz Standard Mode (or 400000 for Fast Mode)
+
+energy:
+  active_fraction: 0.05           # 5% processor active duty cycle
+
+validation_ranges:
+  threshold_bpm:
+    min: 40.0
+    max: 220.0
+    description: "Heart rate alert threshold in BPM (must be within physiological limits 40-220 BPM)"
+  duration_s:
+    min: 1.0
+    max: 60.0
+    description: "Signal simulation duration in seconds (1.0 to 60.0 seconds)"
+  cache_size_bytes:
+    min: 64
+    max: 65536
+    description: "Cache capacity in bytes (must be power of 2, 64B to 64KB)"
+  line_size_bytes:
+    min: 4
+    max: 128
+    description: "Cache line size in bytes (must be power of 2, 4B to 128B)"
+  associativity:
+    min: 1
+    max: 16
+    description: "Cache associativity (1 = direct-mapped, 2, 4, 8, 16-way set-associative)"
+  active_fraction:
+    min: 0.001
+    max: 1.0
+    description: "Processor active duty cycle fraction (0.001 to 1.0)"
