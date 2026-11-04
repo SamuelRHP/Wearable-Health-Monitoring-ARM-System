@@ -30,7 +30,7 @@ const state = {
   armStepIndex: 0,
   tourCurrentStep: 0,
   verificationData: null,
-  theme: "dark", // default
+  theme: "light", // default light theme
   currentView: "demo", // "demo" or "details"
 };
 
@@ -739,8 +739,9 @@ function setSimLoading(isLoading) {
   dom.demoSimSpinner.style.display = isLoading ? "inline-block" : "none";
   dom.simSpinner.style.display = isLoading ? "inline-block" : "none";
 
-  dom.btnDemoRunText.textContent = isLoading ? "Simulating..." : "▶ Run Simulation";
-  dom.btnRunText.textContent = isLoading ? "Simulating..." : "▶ Run Simulation";
+  const playSvg = '<svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Simulation';
+  dom.btnDemoRunText.innerHTML = isLoading ? "Simulating..." : playSvg;
+  dom.btnRunText.innerHTML = isLoading ? "Simulating..." : playSvg;
 }
 
 // ============================================================================
@@ -943,7 +944,7 @@ function createOrUpdateChart(canvasElem, isDemo, data) {
             label: (item) => {
               if (item.datasetIndex === 0) return ` Raw ADC: ${item.raw}`;
               if (item.datasetIndex === 1) return ` Filtered Q15: ${item.raw}`;
-              if (item.datasetIndex === 2 && item.raw !== null) return ` ❤️ Systolic Peak Detected`;
+              if (item.datasetIndex === 2 && item.raw !== null) return ` ● Systolic Peak Detected`;
               return "";
             },
           },
@@ -1221,14 +1222,16 @@ async function loadVerification() {
 }
 
 function setVerifyBadge(badgeElem, iconElem, passed) {
+  const passSvg = '<svg class="verify-icon-svg text-success" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  const failSvg = '<svg class="verify-icon-svg text-danger" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
   if (passed) {
     badgeElem.textContent = "PASSED";
     badgeElem.className = "verify-status-badge badge-success";
-    iconElem.textContent = "✅";
+    iconElem.innerHTML = passSvg;
   } else {
     badgeElem.textContent = "FAILED";
     badgeElem.className = "verify-status-badge badge-alert";
-    iconElem.textContent = "❌";
+    iconElem.innerHTML = failSvg;
   }
 }
 
@@ -1318,7 +1321,7 @@ function renderTourStep() {
   dom.tourStepBody.innerHTML = step.body;
 
   dom.btnTourPrev.disabled = state.tourCurrentStep === 0;
-  dom.btnTourNext.textContent = state.tourCurrentStep === tourSteps.length - 1 ? "Finish ✓" : "Next ▶";
+  dom.btnTourNext.innerHTML = state.tourCurrentStep === tourSteps.length - 1 ? "Finish" : 'Next <svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/></svg>';
 }
 
 function tourNext() {
@@ -1392,8 +1395,8 @@ function downloadBlob(content, filename, mimeType) {
 
 function setupTheme() {
   const saved = localStorage.getItem("theme");
-  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const theme = saved ? saved : (prefersDark ? "dark" : "light");
+  // Default to clean light mode unless user explicitly selected dark previously
+  const theme = saved ? saved : "light";
   applyTheme(theme);
 }
 
@@ -1406,7 +1409,10 @@ function toggleTheme() {
 function applyTheme(theme) {
   state.theme = theme;
   document.documentElement.setAttribute("data-theme", theme);
-  dom.themeToggle.textContent = theme === "dark" ? "🌙" : "☀️";
+  const sunSvg = '<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  const moonSvg = '<svg class="icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  dom.themeToggle.innerHTML = theme === "dark" ? sunSvg : moonSvg;
+  dom.themeToggle.setAttribute("aria-label", `Switch to ${theme === "dark" ? "light" : "dark"} mode`);
 
   // Re-render chart if it exists to adapt gridlines & axes
   if (state.lastResult && state.chartInstance) {

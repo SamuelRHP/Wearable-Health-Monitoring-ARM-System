@@ -13,7 +13,7 @@
   <!-- Header / Navigation Bar -->
   <header class="app-header" role="banner">
     <div class="header-brand">
-      <div class="brand-icon" aria-hidden="true">❤️⚡</div>
+      <div class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
       <div>
         <h1 class="brand-title">Wearable Health-Monitoring ARM System</h1>
         <p class="brand-subtitle">Energy-conscious processor simulation &bull; COA Mini-Project</p>
@@ -31,16 +31,16 @@
       <!-- View Switcher: Demo (Default) vs Details -->
       <nav class="view-nav" role="navigation" aria-label="Dashboard Views">
         <button type="button" id="btn-view-demo" class="btn btn-view active" aria-pressed="true" title="Default presenter-friendly overview">
-          🎥 Demo View
+          <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Demo View
         </button>
         <button type="button" id="btn-view-details" class="btn btn-view" aria-pressed="false" title="Explore microarchitectural details, register stepper, and verification">
-          🔍 Details View
+          <svg class="icon" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg> Details View
         </button>
       </nav>
 
       <!-- Theme Toggle -->
       <button id="theme-toggle" class="btn btn-icon btn-sm" aria-label="Toggle dark and light theme" title="Toggle dark/light mode">
-        🌙
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       </button>
     </div>
   </header>
@@ -48,7 +48,7 @@
   <!-- Global Connectivity / Validation Alert Banner -->
   <aside id="global-error-banner" class="alert-banner alert-error" role="alert" style="display: none;">
     <div class="alert-content">
-      <span class="alert-icon" aria-hidden="true">❌</span>
+      <span class="alert-icon" aria-hidden="true"><svg class="icon text-danger" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
       <div class="alert-text" id="global-error-text">
         Backend offline or request unprocessable.
       </div>
@@ -59,7 +59,7 @@
   <!-- Hard Constraint Warning Banner (Kept for details view / accessibility) -->
   <aside id="placeholder-banner" class="alert-banner alert-warning" role="alert" style="display: none;">
     <div class="alert-content">
-      <span class="alert-icon" aria-hidden="true">⚠️</span>
+      <span class="alert-icon" aria-hidden="true"><svg class="icon text-warning" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
       <div class="alert-text">
         <strong>PLACEHOLDER VALUES IN EFFECT:</strong>
         <span id="placeholder-banner-text">Energy parameters are unverified estimates from STM32L476RG datasheets pending student syllabus confirmation. Results are estimated from manufacturer datasheets; never claim real battery life.</span>
@@ -133,10 +133,10 @@
           <div class="demo-action-buttons">
             <button type="button" id="btn-demo-run" class="btn btn-primary btn-lg">
               <span class="spinner" id="demo-sim-spinner" style="display: none;" aria-hidden="true"></span>
-              <span id="btn-demo-run-text">▶ Run Simulation</span>
+              <span id="btn-demo-run-text"><svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Simulation</span>
             </button>
             <button type="button" id="btn-demo-reset" class="btn btn-secondary" title="Reset all parameters to default">
-              🔄 Reset
+              <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reset
             </button>
           </div>
 
@@ -145,10 +145,10 @@
           <!-- 1-Click Quick Presets -->
           <div class="demo-presets-cluster" role="group" aria-label="1-Click Presets">
             <button type="button" id="btn-preset-normal" class="btn btn-preset btn-preset-normal" title="1-Click: Set threshold to 100 BPM and run normal rhythm simulation">
-              ⚡ Normal (75 bpm, thresh 100)
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Normal (75 bpm, thresh 100)
             </button>
             <button type="button" id="btn-preset-alert" class="btn btn-preset btn-preset-alert" title="1-Click: Set threshold to 70 BPM and trigger tachycardia alert branch">
-              🚨 Trigger alert (thresh 70)
+              <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Trigger alert (thresh 70)
             </button>
           </div>
 
@@ -230,7 +230,7 @@
         <!-- Summary Card 1: Heart Rate -->
         <article class="card kpi-card" id="kpi-card-hr">
           <div class="kpi-header">
-            <span class="kpi-icon" aria-hidden="true">❤️</span>
+            <span class="kpi-icon" aria-hidden="true"><svg class="kpi-icon-svg" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
             <span class="kpi-label">Heart Rate (BPM)</span>
           </div>
           <div class="kpi-body">
@@ -243,7 +243,7 @@
         <!-- Summary Card 2: Alert Status & ALU Flags -->
         <article class="card kpi-card" id="kpi-card-alu">
           <div class="kpi-header">
-            <span class="kpi-icon" aria-hidden="true">⚡</span>
+            <span class="kpi-icon" aria-hidden="true"><svg class="kpi-icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
             <span class="kpi-label">Alert Status &amp; ALU</span>
           </div>
           <div class="kpi-body">
@@ -261,7 +261,7 @@
         <!-- Summary Card 3: Cache Hit Rate & AMAT -->
         <article class="card kpi-card" id="kpi-card-cache">
           <div class="kpi-header">
-            <span class="kpi-icon" aria-hidden="true">💾</span>
+            <span class="kpi-icon" aria-hidden="true"><svg class="kpi-icon-svg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
             <span class="kpi-label">Cache Hit Rate &amp; AMAT</span>
           </div>
           <div class="kpi-body">
@@ -274,11 +274,11 @@
         <!-- Summary Card 4: Average Current & Savings (With Shrunk Placeholder Chip) -->
         <article class="card kpi-card" id="kpi-card-energy">
           <div class="kpi-header">
-            <span class="kpi-icon" aria-hidden="true">🔋</span>
+            <span class="kpi-icon" aria-hidden="true"><svg class="kpi-icon-svg" viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg></span>
             <span class="kpi-label">Average Current</span>
             <!-- Requirement 4: Shrunk PLACEHOLDER chip next to energy card -->
             <span class="chip-placeholder" id="demo-energy-placeholder-chip" tabindex="0" title="Energy values are estimates from STM32L476RG datasheets (DocID025976 Rev 5, Table 34 &amp; 39) pending student syllabus confirmation. Never claims real battery life. See docs/OPEN_ITEMS.md.">
-              Estimates (placeholder) ℹ️
+              Estimates (placeholder) <svg class="icon-tooltip" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             </span>
           </div>
           <div class="kpi-body">
@@ -294,7 +294,7 @@
       <section class="card chart-card demo-chart-card" aria-labelledby="chart-heading">
         <div class="chart-header">
           <div class="chart-title-area">
-            <h2 id="chart-heading" class="card-title">📈 Real-Time Physiological Waveform</h2>
+            <h2 id="chart-heading" class="card-title"><svg class="icon icon-lg" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Real-Time Physiological Waveform</h2>
             <span class="chart-subtitle">Raw 12-bit ADC &bull; Signed Q15 &bull; ARM Cortex-M 4-tap boxcar filter &bull; Systolic pulse peaks</span>
           </div>
           <div class="chart-legend-toggles">
@@ -327,13 +327,13 @@
         </div>
         <div class="details-topbar-actions">
           <button type="button" id="menu-btn-tour" class="btn btn-secondary btn-sm" title="Start guided tour of the signal path">
-            🗺️ Guided Tour
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg> Guided Tour
           </button>
           <button type="button" id="btn-export-json" class="btn btn-secondary btn-sm" title="Export complete simulation state as JSON">
-            📄 Export JSON
+            <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Export JSON
           </button>
           <button type="button" id="btn-export-csv" class="btn btn-secondary btn-sm" title="Export physiological PPG signal as CSV">
-            📊 Export CSV
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export CSV
           </button>
         </div>
       </div>
@@ -341,7 +341,7 @@
       <!-- Full Controls Panel -->
       <section class="card controls-card" aria-labelledby="controls-heading">
         <div class="card-header">
-          <h2 id="controls-heading" class="card-title">🎛️ Complete Simulation Parameters &amp; Sensor Controls</h2>
+          <h2 id="controls-heading" class="card-title"><svg class="icon icon-lg" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg> Complete Simulation Parameters &amp; Sensor Controls</h2>
           <span class="card-badge">REST API &bull; POST /api/run</span>
         </div>
         
@@ -352,7 +352,7 @@
             <div class="form-group">
               <label for="ctrl-source" class="form-label" title="Source of physiological photoplethysmogram (PPG) waveform">
                 Signal Source:
-                <span class="info-tooltip" tabindex="0" aria-label="PhysioNet BIDMC 125 Hz clinical PPG records or deterministic synthetic fallback generator.">ℹ️</span>
+                <span class="info-tooltip" tabindex="0" aria-label="PhysioNet BIDMC 125 Hz clinical PPG records or deterministic synthetic fallback generator."><svg class="icon-tooltip" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
               </label>
               <select id="ctrl-source" class="form-select">
                 <option value="synthetic">Synthetic Generator (Offline Fallback)</option>
@@ -366,7 +366,7 @@
             <div class="form-group" id="grp-target-bpm">
               <label for="ctrl-target-bpm" class="form-label" title="Simulated patient resting heart rate for synthetic signal generator">
                 Simulated Heart Rate:
-                <span class="info-tooltip" tabindex="0" aria-label="Controls the pulse frequency of the synthetic physiological signal generator (40 to 180 BPM).">ℹ️</span>
+                <span class="info-tooltip" tabindex="0" aria-label="Controls the pulse frequency of the synthetic physiological signal generator (40 to 180 BPM)."><svg class="icon-tooltip" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
               </label>
               <div class="slider-container">
                 <input type="range" id="ctrl-target-bpm" min="40" max="180" step="1" value="75" class="form-range" aria-valuemin="40" aria-valuemax="180">
@@ -382,7 +382,7 @@
             <div class="form-group">
               <label for="ctrl-threshold" class="form-label" title="Safety threshold in beats per minute triggering ARM ALU alert branch">
                 Alert Threshold:
-                <span class="info-tooltip" tabindex="0" aria-label="Heart rates above this threshold set ALU flags (Z=0, N=V) and trigger a BGT alert branch.">ℹ️</span>
+                <span class="info-tooltip" tabindex="0" aria-label="Heart rates above this threshold set ALU flags (Z=0, N=V) and trigger a BGT alert branch."><svg class="icon-tooltip" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
               </label>
               <div class="slider-container">
                 <input type="range" id="ctrl-threshold" min="40" max="220" step="1" value="100" class="form-range" aria-valuemin="40" aria-valuemax="220">
@@ -398,7 +398,7 @@
             <div class="form-group">
               <label for="ctrl-duration" class="form-label" title="Duration of physiological signal window processed">
                 Duration:
-                <span class="info-tooltip" tabindex="0" aria-label="Length of signal processed by the moving average filter and cache simulator.">ℹ️</span>
+                <span class="info-tooltip" tabindex="0" aria-label="Length of signal processed by the moving average filter and cache simulator."><svg class="icon-tooltip" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
               </label>
               <div class="slider-container">
                 <input type="range" id="ctrl-duration" min="1" max="60" step="1" value="10" class="form-range" aria-valuemin="1" aria-valuemax="60">
@@ -414,7 +414,7 @@
             <div class="form-group">
               <label for="ctrl-cache-size" class="form-label" title="Total cache memory capacity in bytes">
                 Cache Size:
-                <span class="info-tooltip" tabindex="0" aria-label="Must be a power of 2. Models SRAM cache capacity.">ℹ️</span>
+                <span class="info-tooltip" tabindex="0" aria-label="Must be a power of 2. Models SRAM cache capacity."><svg class="icon-tooltip" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
               </label>
               <select id="ctrl-cache-size" class="form-select">
                 <option value="64">64 Bytes (Tiny / Test)</option>
@@ -436,7 +436,7 @@
             <div class="form-group">
               <label for="ctrl-line-size" class="form-label" title="Cache block size in bytes">
                 Line Size:
-                <span class="info-tooltip" tabindex="0" aria-label="Number of bytes per block. Determines spatial locality and offset bits.">ℹ️</span>
+                <span class="info-tooltip" tabindex="0" aria-label="Number of bytes per block. Determines spatial locality and offset bits."><svg class="icon-tooltip" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
               </label>
               <select id="ctrl-line-size" class="form-select">
                 <option value="4">4 Bytes (1 Word)</option>
@@ -453,7 +453,7 @@
             <div class="form-group">
               <label for="ctrl-associativity" class="form-label" title="Cache associativity mapping style">
                 Associativity:
-                <span class="info-tooltip" tabindex="0" aria-label="1 = Direct-mapped; 2, 4, 8 = N-way set-associative with LRU eviction.">ℹ️</span>
+                <span class="info-tooltip" tabindex="0" aria-label="1 = Direct-mapped; 2, 4, 8 = N-way set-associative with LRU eviction."><svg class="icon-tooltip" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
               </label>
               <select id="ctrl-associativity" class="form-select">
                 <option value="1" selected>1 (Direct-Mapped)</option>
@@ -468,7 +468,7 @@
             <div class="form-group">
               <label for="ctrl-active-frac" class="form-label" title="Percentage of time CPU core executes in active Run mode vs low-power Stop 2 sleep">
                 Active Time (%):
-                <span class="info-tooltip" tabindex="0" aria-label="Models CPU duty cycling: I_avg = I_active * D + I_sleep * (1 - D).">ℹ️</span>
+                <span class="info-tooltip" tabindex="0" aria-label="Models CPU duty cycling: I_avg = I_active * D + I_sleep * (1 - D)."><svg class="icon-tooltip" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
               </label>
               <div class="slider-container">
                 <input type="range" id="ctrl-active-frac" min="0.1" max="100.0" step="0.1" value="5.0" class="form-range" aria-valuemin="0.1" aria-valuemax="100.0">
@@ -486,10 +486,10 @@
           <div class="form-actions">
             <button type="button" id="btn-run-sim" class="btn btn-primary">
               <span class="spinner" id="sim-spinner" style="display: none;" aria-hidden="true"></span>
-              <span id="btn-run-text">▶ Run Simulation</span>
+              <span id="btn-run-text"><svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Simulation</span>
             </button>
             <button type="button" id="btn-reset-defaults" class="btn btn-secondary">
-              🔄 Reset to Defaults
+              <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Reset to Defaults
             </button>
           </div>
         </form>
@@ -499,7 +499,7 @@
       <section class="card chart-card details-chart-card" aria-labelledby="details-chart-heading">
         <div class="chart-header">
           <div class="chart-title-area">
-            <h2 id="details-chart-heading" class="card-title">📈 Real-Time Physiological Waveform &amp; Signal Processing</h2>
+            <h2 id="details-chart-heading" class="card-title"><svg class="icon icon-lg" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Real-Time Physiological Waveform &amp; Signal Processing</h2>
             <span class="chart-subtitle">Raw 12-bit ADC &bull; Signed Q15 &bull; ARM Cortex-M 4-tap boxcar filter &bull; Detected systolic pulse peaks</span>
           </div>
           <div class="chart-legend-toggles">
@@ -519,25 +519,25 @@
         <!-- Tab Navigation Bar -->
         <nav class="tabs-nav" role="tablist" aria-label="COA Subsystems">
           <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-num-repr" id="tab-btn-num-repr">
-            <span class="tab-icon">🔢</span> 1. Number Repr
+            <svg class="tab-icon-svg" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg> 1. Number Repr
           </button>
           <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-alu" id="tab-btn-alu">
-            <span class="tab-icon">⚙️</span> 2. ALU &amp; Flags
+            <svg class="tab-icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 2. ALU &amp; Flags
           </button>
           <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-arm" id="tab-btn-arm">
-            <span class="tab-icon">🧠</span> 3. ARM Core
+            <svg class="tab-icon-svg" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg> 3. ARM Core
           </button>
           <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-cache" id="tab-btn-cache">
-            <span class="tab-icon">🗄️</span> 4. Cache Hierarchy
+            <svg class="tab-icon-svg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg> 4. Cache Hierarchy
           </button>
           <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-serial" id="tab-btn-serial">
-            <span class="tab-icon">🔌</span> 5. Serial I/O
+            <svg class="tab-icon-svg" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> 5. Serial I/O
           </button>
           <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-energy" id="tab-btn-energy">
-            <span class="tab-icon">⚡</span> 6. Duty-Cycle Energy
+            <svg class="tab-icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 6. Duty-Cycle Energy
           </button>
           <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verify" id="tab-btn-verify">
-            <span class="tab-icon">✅</span> 7. Verification
+            <svg class="tab-icon-svg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 7. Verification
           </button>
         </nav>
 
@@ -582,7 +582,7 @@
             </div>
 
             <div class="try-it-callout">
-              💡 <strong>Try It:</strong> Change the signal duration or input source. Observe how the 12-bit ADC reading converts directly to signed Q15 two's complement hex with zero software division overhead!
+              <span class="try-it-badge">TRY THIS</span> <strong>Explore:</strong> Change the signal duration or input source. Observe how the 12-bit ADC reading converts directly to signed Q15 two's complement hex with zero software division overhead!
             </div>
           </div>
 
@@ -645,7 +645,7 @@
             </div>
 
             <div class="try-it-callout">
-              💡 <strong>Try It:</strong> Lower the Alert Threshold slider to 70 BPM. Observe the N flag turn off, the Carry flag assert, and the BGT alert branch trigger!
+              <span class="try-it-badge">TRY THIS</span> <strong>Explore:</strong> Lower the Alert Threshold slider to 70 BPM. Observe the N flag turn off, the Carry flag assert, and the BGT alert branch trigger!
             </div>
           </div>
 
@@ -670,10 +670,10 @@
             <div class="stepper-container">
               <div class="stepper-controls">
                 <div class="stepper-buttons">
-                  <button type="button" class="btn btn-secondary btn-sm" id="btn-step-first" title="Jump to first instruction">⏮ First</button>
-                  <button type="button" class="btn btn-secondary btn-sm" id="btn-step-prev" title="Previous instruction">◀ Previous</button>
-                  <button type="button" class="btn btn-primary btn-sm" id="btn-step-next" title="Next instruction">Next ▶</button>
-                  <button type="button" class="btn btn-secondary btn-sm" id="btn-step-last" title="Jump to last instruction">⏭ Last</button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-step-first" title="Jump to first instruction"><svg class="icon" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg> First</button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-step-prev" title="Previous instruction"><svg class="icon" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/></svg> Previous</button>
+                  <button type="button" class="btn btn-primary btn-sm" id="btn-step-next" title="Next instruction">Next <svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/></svg></button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-step-last" title="Jump to last instruction">Last <svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
                 </div>
                 <div class="stepper-counter" id="step-counter-text">
                   Instruction 1 of 18
@@ -701,7 +701,7 @@
             </div>
 
             <div class="try-it-callout">
-              💡 <strong>Try It:</strong> Click the <strong>Next ▶</strong> button above to step through the 18 Thumb instructions. Observe how halfwords are loaded from memory pointer <code>R0</code>, accumulated into <code>R2</code>, and divided by 4 with <code>ASRS</code>!
+              <span class="try-it-badge">TRY THIS</span> <strong>Explore:</strong> Click the <strong>Next</strong> button above to step through the 18 Thumb instructions. Observe how halfwords are loaded from memory pointer <code>R0</code>, accumulated into <code>R2</code>, and divided by 4 with <code>ASRS</code>!
             </div>
           </div>
 
@@ -756,7 +756,7 @@
             </div>
 
             <div class="try-it-callout">
-              💡 <strong>Try It:</strong> Select a tiny cache size (e.g. 64 Bytes) in the controls above and re-run. Observe how capacity and conflict misses reduce the hit rate and elevate AMAT!
+              <span class="try-it-badge">TRY THIS</span> <strong>Explore:</strong> Select a tiny cache size (e.g. 64 Bytes) in the controls above and re-run. Observe how capacity and conflict misses reduce the hit rate and elevate AMAT!
             </div>
           </div>
 
@@ -781,7 +781,7 @@
             <div class="serial-grid">
               <!-- UART Card -->
               <div class="serial-card">
-                <h4>📡 UART Telemetry Channel (8-N-1)</h4>
+                <h4><svg class="icon" viewBox="0 0 24 24"><path d="M4.93 19.07A10 10 0 0 1 12 2a10 10 0 0 1 7.07 17.07"/><circle cx="12" cy="12" r="2"/></svg> UART Telemetry Channel (8-N-1)</h4>
                 <ul class="spec-list">
                   <li>Baud Rate: <strong id="uart-baud">115,200</strong> baud</li>
                   <li>Framing: <strong>1 Start Bit, 8 Data Bits, 1 Stop Bit</strong> (10 bits/frame)</li>
@@ -797,7 +797,7 @@
 
               <!-- I2C Card -->
               <div class="serial-card">
-                <h4>🔌 I2C Sensor Interconnect Bus</h4>
+                <h4><svg class="icon" viewBox="0 0 24 24"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="12" r="3"/><line x1="9" y1="12" x2="15" y2="12"/></svg> I2C Sensor Interconnect Bus</h4>
                 <ul class="spec-list">
                   <li>Bus Clock Frequency: <strong id="i2c-clock">100</strong> kHz (Standard Mode)</li>
                   <li>Cycles per 2-byte Sample: <strong>48 clock cycles</strong></li>
@@ -817,7 +817,7 @@
             </div>
 
             <div class="try-it-callout">
-              💡 <strong>Try It:</strong> Notice that at 125 Hz, the I2C bus is occupied for only 60 ms out of every 1,000 ms. For the remaining 94% of the time, the microcontroller gates clocks and enters low-power sleep!
+              <span class="try-it-badge">TRY THIS</span> <strong>Explore:</strong> Notice that at 125 Hz, the I2C bus is occupied for only 60 ms out of every 1,000 ms. For the remaining 94% of the time, the microcontroller gates clocks and enters low-power sleep!
             </div>
           </div>
 
@@ -862,13 +862,13 @@
             </div>
 
             <div class="datasheet-citation-box">
-              <h4>📖 Datasheet Source Citation (Hard Constraint)</h4>
+              <h4><svg class="icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Datasheet Source Citation (Hard Constraint)</h4>
               <p id="energy-source-text">STMicroelectronics STM32L476xx Datasheet (DocID025976 Rev 5, Table 34 &amp; 39, pp. 112, 120)</p>
-              <small>⚠️ <em>Worded as "estimated from datasheet figures"; never claims real battery life. Confirm in docs/OPEN_ITEMS.md.</em></small>
+              <small><em>Note: Worded as "estimated from datasheet figures"; never claims real battery life. Confirm in docs/OPEN_ITEMS.md.</em></small>
             </div>
 
             <div class="try-it-callout">
-              💡 <strong>Try It:</strong> Move the Active Time slider in the controls to 1% or 20% to see how duty cycling dynamically extends battery life in real-time health monitors!
+              <span class="try-it-badge">TRY THIS</span> <strong>Explore:</strong> Move the Active Time slider in the controls to 1% or 20% to see how duty cycling dynamically extends battery life in real-time health monitors!
             </div>
           </div>
 
@@ -887,7 +887,7 @@
               <!-- Check 1: Q15 vs Float -->
               <div class="card verify-card" id="card-verify-q15">
                 <div class="verify-header">
-                  <span class="verify-icon" id="icon-verify-q15">✅</span>
+                  <span class="verify-icon" id="icon-verify-q15"><svg class="verify-icon-svg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
                   <div>
                     <h4 class="verify-title">1. Q15 vs. IEEE 754 Float Reference</h4>
                     <p class="verify-sub">Evaluates quantization error across physiological signals</p>
@@ -905,7 +905,7 @@
               <!-- Check 2: Emulated ARM vs Python -->
               <div class="card verify-card" id="card-verify-arm">
                 <div class="verify-header">
-                  <span class="verify-icon" id="icon-verify-arm">✅</span>
+                  <span class="verify-icon" id="icon-verify-arm"><svg class="verify-icon-svg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
                   <div>
                     <h4 class="verify-title">2. Emulated ARM vs. Pure Python</h4>
                     <p class="verify-sub">100 random test vectors in Unicorn vs Python reference</p>
@@ -923,7 +923,7 @@
               <!-- Check 3: Cache vs Hand Calculation -->
               <div class="card verify-card" id="card-verify-cache">
                 <div class="verify-header">
-                  <span class="verify-icon" id="icon-verify-cache">✅</span>
+                  <span class="verify-icon" id="icon-verify-cache"><svg class="verify-icon-svg" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
                   <div>
                     <h4 class="verify-title">3. Cache vs. Hand-Calculated Trace</h4>
                     <p class="verify-sub">Deterministic 10-access trace vs manual calculation</p>
@@ -942,7 +942,7 @@
 
             <div style="margin-top: 1.5rem; text-align: center;">
               <button type="button" class="btn btn-secondary" id="btn-retest-verification">
-                🔄 Re-run Automated Verification
+                <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Re-run Automated Verification
               </button>
             </div>
           </div>
@@ -967,8 +967,8 @@
         <p>Tour step content goes here.</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary btn-sm" id="btn-tour-prev">◀ Back</button>
-        <button class="btn btn-primary btn-sm" id="btn-tour-next">Next ▶</button>
+        <button class="btn btn-secondary btn-sm" id="btn-tour-prev"><svg class="icon" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20"/></svg> Back</button>
+        <button class="btn btn-primary btn-sm" id="btn-tour-next">Next <svg class="icon" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/></svg></button>
       </div>
     </div>
   </div>

@@ -6,7 +6,7 @@
 
 /* --- CSS Variables: Root Colors & Themes --- */
 :root {
-  /* Light Theme (Default) */
+  /* Refined Light Theme (Default, Easy on the Eyes) */
   --bg-primary: #f8fafc;
   --bg-secondary: #ffffff;
   --bg-tertiary: #f1f5f9;
@@ -16,34 +16,41 @@
   --text-secondary: #475569;
   --text-muted: #64748b;
   
-  --border-color: #cbd5e1;
-  --border-focus: #2563eb;
+  --border-color: #e2e8f0;
+  --border-subtle: #edf2f7;
+  --border-focus: #0284c7;
   
-  --accent-blue: #2563eb;
-  --accent-blue-hover: #1d4ed8;
-  --accent-green: #16a34a;
-  --accent-green-bg: #dcfce7;
+  --accent-blue: #0284c7;
+  --accent-blue-hover: #0369a1;
+  --accent-blue-bg: #e0f2fe;
+
+  --accent-green: #059669;
+  --accent-green-hover: #047857;
+  --accent-green-bg: #ecfdf5;
+
   --accent-red: #dc2626;
-  --accent-red-bg: #fee2e2;
+  --accent-red-hover: #b91c1c;
+  --accent-red-bg: #fef2f2;
+
   --accent-amber: #d97706;
   --accent-amber-bg: #fef3c7;
   
-  --kpi-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --kpi-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
   
-  --font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }
 
-/* Dark Theme Overrides */
+/* Refined Dark Theme Overrides */
 [data-theme="dark"] {
-  --bg-primary: #0b0f19;
-  --bg-secondary: #111827;
-  --bg-tertiary: #1f2937;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
   --bg-elevated: #1e293b;
   
   --text-primary: #f8fafc;
@@ -51,45 +58,26 @@
   --text-muted: #94a3b8;
   
   --border-color: #334155;
-  --border-focus: #60a5fa;
+  --border-subtle: #1e293b;
+  --border-focus: #38bdf8;
   
-  --accent-blue: #3b82f6;
-  --accent-blue-hover: #60a5fa;
-  --accent-green: #22c55e;
-  --accent-green-bg: #052e16;
-  --accent-red: #ef4444;
-  --accent-red-bg: #450a0a;
-  --accent-amber: #f59e0b;
-  --accent-amber-bg: #451a03;
-  
-  --kpi-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-}
+  --accent-blue: #38bdf8;
+  --accent-blue-hover: #7dd3fc;
+  --accent-blue-bg: rgba(56, 189, 248, 0.12);
 
-/* System Preference Detection */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-primary: #0b0f19;
-    --bg-secondary: #111827;
-    --bg-tertiary: #1f2937;
-    --bg-elevated: #1e293b;
-    
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
-    
-    --border-color: #334155;
-    --border-focus: #60a5fa;
-    
-    --accent-blue: #3b82f6;
-    --accent-blue-hover: #60a5fa;
-    --accent-green: #22c55e;
-    --accent-green-bg: #052e16;
-    --accent-red: #ef4444;
-    --accent-red-bg: #450a0a;
-    --accent-amber: #f59e0b;
-    --accent-amber-bg: #451a03;
-  }
+  --accent-green: #10b981;
+  --accent-green-hover: #34d399;
+  --accent-green-bg: rgba(16, 185, 129, 0.12);
+
+  --accent-red: #f43f5e;
+  --accent-red-hover: #fb7185;
+  --accent-red-bg: rgba(244, 63, 94, 0.12);
+
+  --accent-amber: #f59e0b;
+  --accent-amber-bg: rgba(245, 158, 11, 0.12);
+  
+  --kpi-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
 }
 
 /* --- Global Reset & Typography --- */
@@ -152,7 +140,20 @@ code, pre {
 }
 
 .brand-icon {
-  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--accent-blue-bg);
+  color: var(--accent-blue);
+  flex-shrink: 0;
+}
+.brand-icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  stroke: var(--accent-blue);
 }
 
 .brand-title {
@@ -1283,6 +1284,9 @@ code, pre {
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .btn-preset-normal {
@@ -1625,3 +1629,93 @@ code, pre {
 }
 
 
+
+/* --- Vector Iconography System (SVG) --- */
+.icon, .kpi-icon-svg, .tab-icon-svg, .verify-icon-svg {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  stroke-width: 1.85;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+}
+
+.kpi-icon-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--accent-blue);
+}
+
+.tab-icon-svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-right: 0.45rem;
+}
+
+.verify-icon-svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--accent-green);
+}
+
+.icon-lg {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-right: 0.4rem;
+}
+
+.icon-inline {
+  width: 0.85rem;
+  height: 0.85rem;
+  vertical-align: -0.05em;
+  margin-left: 0.25rem;
+}
+
+.icon-tooltip {
+  width: 0.85rem;
+  height: 0.85rem;
+  stroke: var(--text-muted);
+  vertical-align: -0.1em;
+}
+
+.text-success {
+  color: var(--accent-green);
+}
+
+.text-danger {
+  color: var(--accent-red);
+}
+
+/* Try This Callout & Badge */
+.try-it-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background-color: var(--bg-tertiary);
+  border-left: 3px solid var(--accent-blue);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  margin-top: 1rem;
+}
+
+.try-it-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: var(--accent-blue-bg);
+  color: var(--accent-blue);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
