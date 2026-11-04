@@ -19,167 +19,116 @@ flowchart LR
 ```
 
 When you first open `http://localhost:8000`:
-1. The **Backend Status Chip** in the top-right shows `● Backend Online`.
-2. The **KPI Summary Cards** immediately report estimated heart rate, alert branch status, cache hit rate, and power savings.
-3. The **Main Chart** plots the raw 12-bit ADC digitization against the filtered Q15 waveform and highlights detected systolic peaks.
-4. Below the chart, eight **COA Concept Tabs** offer interactive worked examples, register steppers, and hardware metrics.
+1. The dashboard lands directly on the **Demo View** (clean, high-contrast, projector-ready, with zero vertical scrolling on a 1366×768 screen).
+2. The **Backend Status Chip** in the header shows `● Backend Online`.
+3. The **Three Controls** (Alert Threshold, Core Active Time, Cache Size) and **Two 1-Click Presets** allow immediate simulation control.
+4. The **Horizontal Pipeline Ribbon** shows live values across all 6 hardware stages from the last run.
+5. The **Four Summary Cards** report heart rate, alert status with ALU flags, cache hit rate with AMAT, and duty-cycled current with energy savings.
+6. The **Waveform Chart** plots the raw 12-bit ADC digitization against the filtered Q15 waveform and highlights detected systolic peaks.
+7. The **`🔍 Details ▾` Menu** gives instant access to all 8 deep-dive concept tabs, the ARM instruction stepper, verification suite, and traceability tables.
+
+---
+
+## 🎬 In-Person Live Demo Script (2-Minute Teacher Walkthrough)
+
+Follow this step-by-step walkthrough when presenting live in person to your teacher or examiner:
+
+| Step | Time | What to Do | What Happens on Screen | What to Say to the Teacher |
+| :---: | :---: | :--- | :--- | :--- |
+| **1** | **0:00 – 0:20** | **Open Dashboard**<br>`http://localhost:8000` | • Status chip: `● Backend Online`<br>• Demo View loads with 3 plain controls<br>• Baseline normal simulation runs automatically<br>• Horizontal pipeline ribbon displays live values across all 6 stages | *"This is an energy-conscious ARM Cortex-M processor simulation for continuous physiological health monitoring. We model the full hardware chain from 12-bit ADC up to duty-cycled low-power sleep modes."* |
+| **2** | **0:20 – 0:40** | **Show Normal Rhythm**<br>Click `⚡ Normal (75 bpm, threshold 100)` | • Controls set: Threshold 100 BPM, Active 5.0%, Cache 4 KB<br>• Waveform displays 12-bit ADC & filtered Q15<br>• Heart Rate: `75 BPM` (`NORMAL` badge)<br>• ALU branch: `BGT: NO`<br>• Cache hit rate: `>99%`<br>• Energy savings: `~95%` | *"At normal resting cardiac rate (~75 BPM), heart rate is safely below our 100 BPM threshold. The ALU computes 75 minus 100, which is negative, so the BGT conditional branch is not taken. Notice our duty cycle: the core sleeps 95% of the time, saving 95% energy."* |
+| **3** | **0:40 – 1:05** | **Trigger Tachycardia Alert**<br>Click `🚨 Trigger alert (thresh 70)` | • Threshold immediately adjusts to 70 BPM<br>• Simulation re-runs in <100 ms<br>• Card turns red: `ALERT (TACHYCARDIA)`<br>• ALU branch switches to `BGT: YES (ALERT)`<br>• APSR flags: `N` clears, `C` asserts (`Z=0, N=V=0`)<br>• Red systolic peak markers remain visible | *"Now I lower the threshold to 70 BPM with one click. The ALU subtraction (75 - 70 = +5) clears the Negative flag and sets Carry. In ARM Cortex-M, condition GT is (Z==0 && N==V), which evaluates to TRUE. The branch is taken and an emergency alert is triggered!"* |
+| **4** | **1:05 – 1:30** | **Explain Pipeline Ribbon**<br>Point to the 6 horizontal steps | • Step 1: `ADC: 2048 → Q15: 0x0000`<br>• Step 2: `ARM Routine (100% Match)`<br>• Step 3: `ALU CMP (APSR Flags & BGT)`<br>• Step 4: `Cache (AMAT: 1.01 cyc vs 20 cyc)`<br>• Step 5: `Serial I/O (UART 8.7% & I2C 6.0%)`<br>• Step 6: `Energy (421 µA, 95% Saved)` | *"This horizontal strip traces the live hardware pipeline across all 6 course outcomes: 12-bit ADC converts to signed Q15 without software division, genuine Thumb instructions execute the 4-tap boxcar filter in Unicorn, ALU flags drive the branch, cache reduces AMAT from 20 to 1 cycle, and serial bus load is under 9%, enabling 95% sleep."* |
+| **5** | **1:30 – 1:55** | **Deep-Dive into Details**<br>Click `🔍 Details ▾` $\to$ `🧠 3. ARM Core & Stepper` | • Switches to Details view<br>• Displays the 18 Thumb instructions in `asm/moving_average.s`<br>• Shows low register file $R0$–$R7$ and APSR flags<br>• Click `Next ▶` to step through instructions | *"If we look under the Details menu, here is our 18-step ARM Thumb assembly debugger running on the Unicorn emulator. We can step through instruction by instruction—loading halfwords with LDRH, sign-extending with SXTH, and arithmetic right shifting with ASRS #2—verifying 100% bit-exact equivalence with Python."* |
+| **6** | **1:55 – 2:00** | **Return to Demo**<br>Click `⬅ Return to Demo View` | • Instantly returns to the clean Demo view<br>• Ready for examiner questions | *"Everything is available under Details, but the main Demo view provides our complete real-time operating picture."* |
 
 ---
 
 ## 🖥️ Screen-by-Screen Guide
 
-### 1. Navigation Header & Status Bar
+### 1. Navigation Header & View Switcher
 - **Brand Title & Subtitle:** Displays the project title (*Wearable Health-Monitoring ARM System*), student name (*Samuel Rohlupuia*), and core problem statement.
 - **Backend Status Chip:**
   - `● Backend Online` (Green): REST API is responding normally on port 8000.
-  - `● Backend Offline` (Red): Server disconnected or not responding; prompts user to start the backend with `python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000 --reload`.
-- **🗺️ Start Tour Button:** Re-opens the 5-step guided modal walkthrough of the signal path.
-- **📥 Export Dropdown:**
-  - *Export Run (JSON)*: Exports the complete simulation state, register steps, and cache metrics as `wearable_arm_simulation.json`.
-  - *Export Signal (CSV)*: Exports time-indexed raw ADC samples, Q15 values, filtered outputs, and peak flags as `physiological_ppg_signal.csv`.
+  - `● Backend Offline` (Red): Server disconnected; shows guidance to run `python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000 --reload`.
+- **View Switcher:**
+  - `🎥 Demo View` (Default): Shows the presenter-friendly view.
+  - `🔍 Details ▾`: Dropdown menu allowing direct access to all 8 COA subsystem concept tabs, Guided Tour, and JSON/CSV data export.
 - **🌙 / ☀️ Theme Toggle:** Switches between WCAG AA dark and light color themes, persisting in `localStorage`.
 
-### 2. Warning & Alert Banners
-- **⚠️ PLACEHOLDER VALUES IN EFFECT (Warning Banner):**
-  - Appears whenever datasheet parameters for the STM32L476RG microcontroller are used.
-  - Explains that energy savings are based on manufacturer datasheets rather than physical bench measurements.
-  - Provides a direct link to `docs/OPEN_ITEMS.md`.
-- **❌ Error Banner:**
-  - Displays dismissible, plain-language error notifications when parameters fail validation (HTTP 422) or network requests time out.
+### 2. Demo View (Presenter Screen)
 
-### 3. Simulation Parameters & Sensor Controls
-Located at the top of the workspace:
-- **Signal Source (`ctrl-source`):**
-  - `Synthetic Generator (Offline Fallback)`: Deterministic mathematical model of a PPG pulse (systolic wave, dicrotic notch, respiratory baseline wander, noise).
-  - `PhysioNet BIDMC Record 01 / 02`: Authentic clinical records sampled at 125 Hz from the BIDMC PPG and Respiration Dataset.
-- **Alert Threshold (`ctrl-threshold`):**
-  - Slider and number input synchronized between 40 and 220 BPM (default: 100 BPM).
-  - Drives the ARM ALU comparison `CMP bpm, threshold` and conditional alert branch `BGT`.
-- **Duration (`ctrl-duration`):**
-  - Selects signal processing window length between 1 and 60 seconds (default: 10 s).
-- **Cache Size (`ctrl-cache-size`):**
-  - Dropdown covering powers of 2 from 64 Bytes to 64 KB (default: 4096 Bytes / 4 KB).
-- **Line Size (`ctrl-line-size`):**
-  - Cache block size from 4 Bytes (1 word) to 128 Bytes (default: 16 Bytes / 4 words).
-- **Associativity (`ctrl-associativity`):**
-  - 1 (Direct-Mapped), 2-Way, 4-Way, or 8-Way Set-Associative with LRU eviction.
-- **Active Time (`ctrl-active-frac`):**
-  - CPU duty-cycle active percentage from 0.1% to 100.0% (default: 5.0%). Models the fraction of time spent in active Run Mode vs. Stop 2 sleep.
-- **Action Buttons:**
-  - `▶ Run Simulation`: Dispatches validated parameters to `POST /api/run` and updates all subsystems. Shows a loading spinner while active.
-  - `🔄 Reset to Defaults`: Resets all sliders, selectors, and number inputs to values fetched from `/api/defaults`.
+#### (a) Simulation Controls & 1-Click Presets
+- **Alert Threshold:** Slider + numeric input [40–220 BPM] (default: 100 BPM). Drives the ARM ALU comparison `CMP bpm, threshold` and conditional alert branch `BGT`.
+- **Active Time (%):** Slider + numeric input [0.1–100.0%] (default: 5.0%). Models the duty cycle in active Run Mode vs. Stop 2 sleep.
+- **Cache Size:** Dropdown covering powers of 2 from 64 Bytes to 64 KB (default: 4 KB).
+- **Large Action Buttons:**
+  - `▶ Run Simulation` (prominent primary button with animated spinner during execution)
+  - `🔄 Reset` (resets all parameters to defaults)
+- **1-Click Quick Presets:**
+  - `⚡ Normal (75 bpm, threshold 100)`: Sets safe threshold and runs simulation.
+  - `🚨 Trigger alert (threshold 70)`: Lowers threshold below heart rate and triggers immediate tachycardia alert.
 
-### 4. Key Performance Indicator (KPI) Summary Cards
-- **Heart Rate (BPM):**
-  - Reports estimated cardiac rate derived from classical peak detection (no machine learning).
-  - Displays a green `NORMAL` badge or a pulsing red `ALERT (TACHYCARDIA)` badge when heart rate exceeds the threshold.
-- **ALU Alert Branch:**
-  - Displays whether the conditional branch `BGT` (Branch if Greater Than) was taken.
-  - Shows mini-chips for the four APSR condition flags (`N`, `Z`, `C`, `V`). Active flags illuminate with a cyan highlight.
-- **Cache Performance & AMAT:**
-  - Shows hit rate percentage and calculated Average Memory Access Time (AMAT) in clock cycles, comparing against un-cached Flash wait states (20.0 cycles).
-- **Average Current Draw:**
-  - Reports duty-cycled average current draw in microamperes (&mu;A), accompanied by a yellow `PLACEHOLDER` badge and the percentage energy savings vs. always-on operation.
+#### (b) Horizontal Hardware Pipeline Ribbon
+Shows the 6 connected hardware stages with live values from the last run:
+1. **1. ADC &rarr; Q15 (CO1):** Displays last sample 12-bit ADC integer [0, 4095] and hex Q15 value.
+2. **2. ARM Routine (CO3):** Displays 4-tap boxcar moving average in Unicorn and confirms 100% bit-exact match with Python.
+3. **3. ALU & Flags (CO2):** Displays live APSR flags ($N, Z, C, V$) and BGT branch decision.
+4. **4. Cache Memory (CO4):** Displays cache hit rate (%) and AMAT in cycles.
+5. **5. Serial I/O (CO5):** Displays UART telemetry and I2C sensor bus load at 125 Hz.
+6. **6. Energy Model (CO6):** Displays duty-cycled current draw and power savings.
+*(Tip: Clicking any step navigates directly to that concept tab in the Details view!)*
 
-### 5. Physiological Waveform Canvas
-- Powered by hardware-accelerated HTML5 Canvas via Chart.js v4.4.1.
+#### (c) Four Summary KPI Cards
+- **Heart Rate (BPM):** Reports cardiac rate from classical peak detection with `NORMAL` or `ALERT (TACHYCARDIA)` badge.
+- **Alert Status & ALU:** Displays whether branch `BGT` was taken, alongside illuminated APSR flag mini-chips ($N, Z, C, V$).
+- **Cache Hit Rate & AMAT:** Reports hit rate (%) and Average Memory Access Time compared to un-cached Flash (20.0 cycles).
+- **Average Current Draw:** Reports duty-cycled average current draw in microamperes (&mu;A), accompanied by a shrunk, unobtrusive chip: `Estimates (placeholder) ℹ️` with a tooltip explaining STM32L476RG datasheet estimates.
+
+#### (d) Physiological Waveform Canvas
+- Powered by Chart.js v4.4.1.
 - Dual-axis graph:
-  - **Left Axis (Q15 Amplitude):** Plots the filtered signed Q15 waveform as a smooth teal line with a subtle area fill.
+  - **Left Axis (Q15 Amplitude):** Plots the filtered signed Q15 waveform as a teal line.
   - **Right Axis (12-bit ADC):** Plots the raw digitized ADC samples [0, 4095] as a dashed neutral line.
-  - **Systolic Pulse Peaks:** Plotted as prominent red circular markers indicating points where systolic pulse waves were identified by classical peak detection.
-- **Layer Toggles:** Checkboxes allow toggling individual signal components on or off.
-- **Interactive Tooltip:** Hovering over any sample reveals timestamp, raw ADC value, Q15 value, and peak detection status.
+  - **Systolic Pulse Peaks:** Plotted as prominent red circular markers at detected peak locations.
+- Layer toggles allow turning individual signal traces on or off.
 
 ---
 
-## 📚 COA Concept Subsystem Tabs
-
-### Tab 1: Number Representation (CO1)
-- **Concept:** Explains fixed-point 1.15 format and two's complement integer arithmetic on microcontrollers lacking an FPU.
-- **Worked Examples:**
-  - Floating-point `0.75` mapped to Q15: $0.75 \times 32768 = 24576 = \text{0x6000}$.
-  - Q15 Multiplication: $0.5 \times 0.5 \to (16384 \times 16384) \gg 15 = 8192 = 0.25$.
-  - Two's complement for $-1$: $\text{0xFFFF}$.
-- **Live Values:** Displays the last processed sample across all stages:
-  - Raw 12-bit ADC integer [0, 4095] and hex `0x...`
-  - Signed 16-bit Q15 value [$-32768, 32767$] and hex `0x...`
-  - ARM filtered output and hex `0x...`
-
-### Tab 2: ALU & Status Flags (CO2)
-- **Concept:** Details 32-bit two's complement subtraction ($A - B = A + \sim B + 1$) and condition flag generation in the ARM APSR register.
-- **Interactive Flags Cluster:**
-  - **N (Negative, bit 31):** Illuminates if result is negative.
-  - **Z (Zero, bit 30):** Illuminates if result is exactly zero ($A = B$).
-  - **C (Carry / No-Borrow, bit 29):** Illuminates if unsigned $A \ge B$.
-  - **V (Overflow, bit 28):** Illuminates if signed overflow occurred.
-- **Condition Evaluation:** Shows how `BGT` (Branch if Greater Than) evaluates `(Z == 0) && (N == V)` to trigger or bypass the tachycardia alert.
-
-### Tab 3: ARM Core & Registers (CO3)
-- **Concept:** Traces real 16-bit Thumb machine code (`asm/moving_average.s`) executing on the Unicorn CPU emulator.
-- **Interactive Instruction Stepper:**
-  - Navigation buttons: `⏮ First`, `◀ Previous`, `Next ▶`, and `⏭ Last`.
-  - Displays the active instruction mnemonic (e.g., `ldrh r2, [r0, #0]`, `asrs r2, r2, #2`, `cmp r2, r1`).
-  - Renders low registers `R0` through `R7` in 32-bit hexadecimal format.
-  - Highlights modified registers in yellow/accent outline when an instruction alters their value.
-- **Verification Badge:** Confirms bit-exact equivalence with the pure Python mathematical reference (`100% Bit-Exact Match`).
-
-### Tab 4: Cache Hierarchy (CO4)
-- **Concept:** Demonstrates memory hierarchy performance, spatial/temporal locality, and Average Memory Access Time (AMAT).
-- **32-Bit Address Slicing Bar:**
-  - Visually splits the 32-bit address into **Tag**, **Index**, and **Offset** bit fields proportional to their widths.
-  - Worked example: 4 KB cache with 16-byte lines $\to$ 4 offset bits, 8 index bits, 20 tag bits.
-- **Performance Metrics:** Hit Rate (%), Miss Rate (%), AMAT with Cache (cycles), and AMAT without Cache (20.0 cycles un-cached Flash wait states).
-
-### Tab 5: Serial Interconnects (CO5)
-- **Concept:** Contrasts asynchronous UART telemetry with synchronous I2C peripheral sensor communication.
-- **UART Telemetry (8-N-1):**
-  - Baud rate (115,200), effective bandwidth (11,520 bytes/s), frame layout (1 start, 8 data, 1 stop), and bus utilisation (8.68% at 125 Hz).
-- **I2C Sensor Bus (Standard Mode 100 kHz):**
-  - Clock frequency (100 kHz), transaction latency (480 &mu;s for 2-byte read), transaction frame diagram, and bus utilisation (6.0% at 125 Hz).
-
-### Tab 6: Duty-Cycle Energy Model (CO6)
-- **Concept:** Models CMOS dynamic power reduction through active/sleep duty cycling.
-- **Mathematical Model:**
-  $$I_{\text{avg}} = (I_{\text{active}} \times D) + (I_{\text{sleep}} \times (1 - D))$$
-- **Live Numbers:**
-  - Average current draw with duty cycling ($I_{\text{avg}}$ in &mu;A).
-  - Always-on baseline current (8400.0 &mu;A).
-  - Percentage energy savings (typically $>94\%$).
-- **Source Citation:** Prominently cites the STMicroelectronics STM32L476xx Datasheet (DocID025976 Rev 5, Table 34 & 39) with explicit `PLACEHOLDER` notices.
-
-### Tab 7: Verification Suite
-- Displays three automated architectural verification checks:
-  1. **Q15 vs. Float Reference:** Checks quantization error across physiological signals (Max Absolute Error $\le 0.5\text{ LSB}$, Mean Absolute Error, RMSE, SNR).
-  2. **Emulated ARM vs. Python:** Verifies 100 randomized test vectors in Unicorn against Python, confirming 100% decision and arithmetic matches.
-  3. **Cache vs. Hand Calculation:** Verifies a deterministic 10-access trace against manual calculation (expected 7 hits, 70% hit rate, 7.0 cycles AMAT).
-- **Re-run Button:** Allows manual re-triggering of the test suite via `GET /api/verification`.
-
-### Tab 8: Traceability (CO1–CO6 & Dimensions)
-- Renders tables directly from `docs/CO_MAPPING.md` and `docs/DIMENSION.md`.
-- Unconfirmed descriptions display a prominent `"To be confirmed from the syllabus"` badge in strict adherence to project constraints.
+### 3. Details View (`🔍 Details ▾`)
+Accessible at any time via the header dropdown or pipeline ribbon:
+- **`⬅ Return to Demo View` Button:** Returns immediately to the presenter screen.
+- **Complete Simulation Parameters:** Full 7 controls (including Signal Source selector and Duration slider).
+- **Tab 1: Number Representation (CO1):** Shows the last sample as raw 12-bit ADC decimal and hex, signed Q15 decimal and hex, and ARM filtered output with worked conversion examples.
+- **Tab 2: ALU & Status Flags (CO2):** Illustrates how 32-bit subtraction (`CMP bpm, threshold`) sets APSR condition flags (`N`, `Z`, `C`, `V`) with interactive LED indicators and evaluates `BGT` condition `(Z == 0) && (N == V)`.
+- **Tab 3: ARM Core & Registers (CO3):** 18-step interactive stepper through the genuine Thumb moving average routine running in the Unicorn emulator. Inspects low registers `R0`–`R7` with register-change highlighting and verifies 100% bit-exact equivalence with Python.
+- **Tab 4: Cache Hierarchy (CO4):** Visualizes 32-bit address partitioning into Tag, Index, and Offset slices, and computes hit rate, miss rate, and AMAT.
+- **Tab 5: Serial Interconnects (CO5):** Analyzes UART (8-N-1 at 115,200 baud) and I2C (100 kHz Standard Mode) bus timings, frame structures, and channel utilisation.
+- **Tab 6: Duty-Cycle Energy Model (CO6):** Formulates average current draw $I_{\text{avg}} = I_{\text{active}} \times D + I_{\text{sleep}} \times (1 - D)$ using STM32L476RG datasheet values, showing >90% battery savings.
+- **Tab 7: Automated Verification Suite:** Live architectural validation cards querying `GET /api/verification`: Q15 quantization error, ARM emulator vs. Python reference, and Cache simulator vs. hand calculation.
+- **Tab 8: Traceability (CO1–CO6 & Dimensions):** Live rendering of syllabus outcomes and evaluation dimensions directly from `docs/CO_MAPPING.md` and `docs/DIMENSION.md`.
 
 ---
 
 ## 🧪 Comprehensive Manual Test Checklist
 
-Before demoing or submitting the project, verify all items on this checklist:
-
 | Test ID | Test Scenario | Steps | Expected Result | Pass/Fail |
 | :--- | :--- | :--- | :--- | :---: |
-| **TC-01** | **Baseline Run with Defaults** | Start backend, navigate to `http://localhost:8000`. | Dashboard loads; status chip shows `● Backend Online`; KPIs populate; waveform renders; no error banners. | [ ] |
-| **TC-02** | **Start Guided Tour** | Click `🗺️ Start Tour` in header. Click `Next ▶` through all 5 steps; click `Finish ✓`. | Tour modal opens with Step 1 of 5; progresses through each COA subsystem; closes cleanly on finish. | [ ] |
-| **TC-03** | **Signal Source Switch** | Change *Signal Source* to `PhysioNet BIDMC Record 01`. Click `▶ Run Simulation`. | Simulation re-executes; waveform updates with clinical BIDMC PPG shape; heart rate updates. | [ ] |
-| **TC-04** | **Trigger ALU Alert (BGT)** | Lower *Alert Threshold* slider to `60 BPM`. Click `▶ Run Simulation`. | Heart Rate badge turns to `ALERT (TACHYCARDIA)`; ALU Branch shows `BGT: YES (ALERT)`; N flag clears, C flag sets. | [ ] |
-| **TC-05** | **Cache Geometry Modification** | Change *Cache Size* to `64 Bytes`, *Line Size* to `4 Bytes`. Click `▶ Run Simulation`. | Tag/Index/Offset bit counts update; Cache Hit Rate drops; AMAT cycles increase noticeably. | [ ] |
-| **TC-06** | **Duty Cycle Slider Adjust** | Move *Active Time (%)* slider from `5.0%` to `20.0%`. Click `▶ Run Simulation`. | Average Current Draw increases from ~421 &mu;A to ~1681 &mu;A; savings decrease accordingly. | [ ] |
-| **TC-07** | **Reset to Defaults** | Click `🔄 Reset to Defaults`. | All controls revert to default values (100 BPM, 10s, 4KB, 16B, Direct-Mapped, 5.0%). | [ ] |
-| **TC-08** | **Instruction Stepper** | Select *Tab 3: ARM Core*. Click `Next ▶` several times, then `◀ Previous`, `⏮ First`, `⏭ Last`. | Active opcode updates; register boxes update in hex; changed registers highlight; button boundaries disable at ends. | [ ] |
-| **TC-09** | **Export Simulation (JSON)** | Click `📥 Export` $\to$ `📄 Export Run (JSON)`. | File `wearable_arm_simulation.json` downloads with complete valid JSON payload. | [ ] |
-| **TC-10** | **Export Signal (CSV)** | Click `📥 Export` $\to$ `📊 Export Signal (CSV)`. | File `physiological_ppg_signal.csv` downloads with 5 columns (`time_s,raw_adc,q15,filtered_q15,is_systolic_peak`). | [ ] |
-| **TC-11** | **Validation Error Handling** | In dev tools console, dispatch invalid request or inspect limits. | Plain-language error message appears in dismissible red alert banner at top. | [ ] |
-| **TC-12** | **Backend Offline Handling** | Stop the uvicorn process in terminal. Wait 10 seconds or reload. | Status chip changes to `● Backend Offline`; friendly guidance appears prompting user to start server. | [ ] |
-| **TC-13** | **Theme Toggle** | Click `🌙` / `☀️` theme toggle button in header. | Dashboard switches cleanly between dark and light themes; chart gridlines re-render with appropriate contrast. | [ ] |
-| **TC-14** | **Placeholder Banner Check** | Verify presence of `⚠️ PLACEHOLDER VALUES IN EFFECT` banner at top of page and next to Energy KPI. | Banner is visible and contains working link to `docs/OPEN_ITEMS.md`. | [ ] |
-| **TC-15** | **Keyboard Navigability** | Use `Tab`, `Shift+Tab`, and `Enter`/`Space` to navigate without mouse. | All buttons, tabs, sliders, and controls display visible `:focus-visible` outlines and operate smoothly. | [ ] |
-| **TC-16** | **Traceability Check** | Select *Tab 8: Traceability*. | Tables render CO1–CO6 and Dimensions; unconfirmed cells display `"To be confirmed from the syllabus"`. | [ ] |
-
+| **TC-01** | **Default Landing on Demo View** | Start backend, navigate to `http://localhost:8000`. | Dashboard lands directly on Demo View; status chip shows `● Backend Online`; KPIs and pipeline populate; waveform renders with zero vertical scrolling on 1366×768. | [ ] |
+| **TC-02** | **1-Click Normal Preset** | Click `⚡ Normal (75 bpm, threshold 100)`. | Controls set: 100 BPM, 5.0%, 4 KB; Heart rate: ~75 BPM (`NORMAL`); ALU branch: `BGT: NO`; N flag clears/sets as expected. | [ ] |
+| **TC-03** | **1-Click Alert Preset** | Click `🚨 Trigger alert (thresh 70)`. | Controls set: 70 BPM; Alert badge turns red: `ALERT (TACHYCARDIA)`; ALU shows `BGT: YES (ALERT)`; N flag clears, C sets. | [ ] |
+| **TC-04** | **Pipeline Ribbon Update** | Run simulation with different thresholds. | All 6 pipeline stages update with live values matching simulation results. | [ ] |
+| **TC-05** | **Pipeline Step Click-Through** | Click Step 2 (ARM Routine) or Step 4 (Cache) in the pipeline strip. | View switches automatically to Details view and selects that corresponding concept tab. | [ ] |
+| **TC-06** | **Details Menu Dropdown** | Click `🔍 Details ▾` in header; select `🧠 3. ARM Core & Stepper`. | View switches to Details view; Tab 3 activates; 18-step instruction stepper is displayed. | [ ] |
+| **TC-07** | **Return to Demo View** | Click `⬅ Return to Demo View` button in Details view. | Screen returns immediately to Demo view with preserved state. | [ ] |
+| **TC-08** | **Instruction Stepper** | In Tab 3 (ARM Core), click `Next ▶` through all 18 instructions. | Opcode updates; register boxes update in hex; modified registers highlight in accent outline. | [ ] |
+| **TC-09** | **Shrunk Placeholder Chip** | Inspect the Energy card in Demo view. | Unobtrusive `Estimates (placeholder) ℹ️` chip is visible with hover tooltip; no oversized banner pushes content down. | [ ] |
+| **TC-10** | **1366×768 No Scrolling** | Open on 1366×768 display or resize browser window. | Demo view fits completely within viewport with zero vertical scrollbars. | [ ] |
+| **TC-11** | **Loading State** | Click `▶ Run Simulation`. | Button shows animated spinner, text changes to `Simulating...`, buttons are temporarily disabled. | [ ] |
+| **TC-12** | **Backend Offline Handling** | Stop uvicorn in terminal, click Run or wait 10s. | Status chip changes to `● Backend Offline`; friendly guidance prompts user to start server in terminal. | [ ] |
+| **TC-13** | **Reset to Defaults** | Change controls, click `🔄 Reset`. | Controls revert to 100 BPM, 5.0%, 4 KB. | [ ] |
+| **TC-14** | **Data Export (JSON & CSV)** | In Details menu, click Export JSON and Export CSV. | `wearable_arm_simulation.json` and `physiological_ppg_signal.csv` download properly. | [ ] |
+| **TC-15** | **Theme Toggle** | Click `🌙` / `☀️` toggle button in header. | Switches cleanly between dark and light themes; chart gridlines adapt contrast. | [ ] |
+| **TC-16** | **Verification Suite** | Select Tab 7 (Verification). | All 3 automated checks show green `PASSED` status with numerical error bounds. | [ ] |
+| **TC-17** | **Traceability Check** | Select Tab 8 (Traceability). | Syllabus tables display CO1–CO6 and Dimensions; unconfirmed cells show `"To be confirmed from the syllabus"`. | [ ] |
+| **TC-18** | **Keyboard Navigability** | Use `Tab`, `Shift+Tab`, and `Enter`/`Space`. | All buttons, tabs, sliders, and controls display visible `:focus-visible` outlines and operate without mouse. | [ ] |

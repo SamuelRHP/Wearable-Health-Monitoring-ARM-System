@@ -4,12 +4,13 @@
  * Frontend Client Application
  * ----------------------------
  * Integrates directly with the FastAPI backend at http://localhost:8000:
+ * - Default "Demo" landing view for in-person evaluations with 1366x768 projector layout.
+ * - 1-Click quick presets: "Normal (75 bpm, threshold 100)" & "Trigger alert (threshold 70)".
+ * - Real-time horizontal pipeline ribbon tracing all 6 COA stages.
+ * - Full "Details" microarchitecture explorer (8 tabs, ARM register stepper, verification, traceability).
  * - Real-time REST API integration with /api/health, /api/defaults, /api/run,
  *   /api/verification, and /api/traceability.
  * - Dynamic physiological waveform visualization via Chart.js with peak marking.
- * - Step-through ARM Cortex-M Thumb register file inspection (R0–R7, APSR flags).
- * - Full coverage of COA subsystems: Number representation (Q15), ALU flags,
- *   ARM instruction execution, Cache hierarchy & AMAT, Serial I/O, Duty-cycle energy.
  * - WCAG AA accessible, dark/light theme toggle, and client-side JSON/CSV export.
  */
 
@@ -29,6 +30,7 @@ const state = {
   verificationData: null,
   traceabilityData: null,
   theme: "dark", // default
+  currentView: "demo", // "demo" or "details"
 };
 
 // ============================================================================
@@ -39,21 +41,49 @@ const dom = {
   // Header & Status
   backendStatus: document.getElementById("backend-status"),
   backendStatusText: document.getElementById("backend-status-text"),
-  btnTour: document.getElementById("btn-tour"),
-  btnExportDropdown: document.getElementById("btn-export-dropdown"),
-  exportMenu: document.getElementById("export-menu"),
+  btnViewDemo: document.getElementById("btn-view-demo"),
+  btnViewDetails: document.getElementById("btn-view-details"),
+  detailsMenu: document.getElementById("details-menu"),
+  btnBackToDemo: document.getElementById("btn-back-to-demo"),
+  panelDemo: document.getElementById("panel-demo"),
+  panelDetails: document.getElementById("panel-details"),
   btnExportJson: document.getElementById("btn-export-json"),
   btnExportCsv: document.getElementById("btn-export-csv"),
+  menuBtnTour: document.getElementById("menu-btn-tour"),
   themeToggle: document.getElementById("theme-toggle"),
 
-  // Banners
+  // Banners & Notifications
   placeholderBanner: document.getElementById("placeholder-banner"),
   placeholderBannerText: document.getElementById("placeholder-banner-text"),
   globalErrorBanner: document.getElementById("global-error-banner"),
   globalErrorText: document.getElementById("global-error-text"),
   btnCloseError: document.getElementById("btn-close-error"),
 
-  // Form Controls
+  // Demo Controls & Presets
+  demoThreshold: document.getElementById("demo-threshold"),
+  demoThresholdNum: document.getElementById("demo-threshold-num"),
+  demoActiveFrac: document.getElementById("demo-active-frac"),
+  demoActiveFracNum: document.getElementById("demo-active-frac-num"),
+  demoCacheSize: document.getElementById("demo-cache-size"),
+  btnDemoRun: document.getElementById("btn-demo-run"),
+  btnDemoReset: document.getElementById("btn-demo-reset"),
+  demoSimSpinner: document.getElementById("demo-sim-spinner"),
+  btnDemoRunText: document.getElementById("btn-demo-run-text"),
+  btnPresetNormal: document.getElementById("btn-preset-normal"),
+  btnPresetAlert: document.getElementById("btn-preset-alert"),
+
+  // Horizontal Pipeline Strip Elements
+  pipeValQ15: document.getElementById("pipe-val-q15"),
+  pipeValArm: document.getElementById("pipe-val-arm"),
+  pipeValAlu: document.getElementById("pipe-val-alu"),
+  pipeFlagsText: document.getElementById("pipe-flags-text"),
+  pipeBranchText: document.getElementById("pipe-branch-text"),
+  pipeValCache: document.getElementById("pipe-val-cache"),
+  pipeValSerial: document.getElementById("pipe-val-serial"),
+  pipeValEnergy: document.getElementById("pipe-val-energy"),
+  pipelineSteps: document.querySelectorAll(".pipeline-step"),
+
+  // Details Form Controls
   ctrlSource: document.getElementById("ctrl-source"),
   ctrlThreshold: document.getElementById("ctrl-threshold"),
   ctrlThresholdNum: document.getElementById("ctrl-threshold-num"),
@@ -69,7 +99,7 @@ const dom = {
   simSpinner: document.getElementById("sim-spinner"),
   btnRunText: document.getElementById("btn-run-text"),
 
-  // KPI Summary Cards
+  // Summary KPI Cards
   kpiHrVal: document.getElementById("kpi-hr-val"),
   kpiAlertBadge: document.getElementById("kpi-alert-badge"),
   kpiBranchVal: document.getElementById("kpi-branch-val"),
@@ -81,6 +111,7 @@ const dom = {
   kpiAmatVal: document.getElementById("kpi-amat-val"),
   kpiEnergyVal: document.getElementById("kpi-energy-val"),
   kpiSavingsBadge: document.getElementById("kpi-savings-badge"),
+  demoEnergyPlaceholderChip: document.getElementById("demo-energy-placeholder-chip"),
 
   // Chart Canvas & Toggles
   waveformChart: document.getElementById("waveform-chart"),
@@ -88,7 +119,7 @@ const dom = {
   chkShowFiltered: document.getElementById("chk-show-filtered"),
   chkShowPeaks: document.getElementById("chk-show-peaks"),
 
-  // Tabs Navigation & Panels
+  // Tabs Navigation & Panels (Details View)
   tabButtons: document.querySelectorAll(".tab-btn"),
   tabPanels: document.querySelectorAll(".tab-panel"),
 
@@ -266,6 +297,50 @@ function hideErrorBanner() {
 }
 
 // ============================================================================
+// View Management (Demo vs Details)
+// ============================================================================
+
+function switchView(viewName) {
+  state.currentView = viewName;
+  if (viewName === "demo") {
+    dom.panelDemo.style.display = "flex";
+    dom.panelDemo.classList.add("active");
+    dom.panelDetails.style.display = "none";
+    dom.panelDetails.classList.remove("active");
+
+    dom.btnViewDemo.classList.add("active");
+    dom.btnViewDemo.setAttribute("aria-pressed", "true");
+    dom.btnViewDetails.classList.remove("active");
+    dom.btnViewDetails.setAttribute("aria-expanded", "false");
+    dom.detailsMenu.classList.remove("show");
+
+    // Re-render chart to adapt dynamically to view container
+    if (state.lastResult && state.chartInstance) {
+      setTimeout(() => {
+        state.chartInstance.resize();
+      }, 50);
+    }
+  } else if (viewName === "details") {
+    dom.panelDemo.style.display = "none";
+    dom.panelDemo.classList.remove("active");
+    dom.panelDetails.style.display = "block";
+    dom.panelDetails.classList.add("active");
+
+    dom.btnViewDemo.classList.remove("active");
+    dom.btnViewDemo.setAttribute("aria-pressed", "false");
+    dom.btnViewDetails.classList.add("active");
+    dom.btnViewDetails.setAttribute("aria-expanded", "true");
+    dom.detailsMenu.classList.remove("show");
+  }
+}
+
+function openDetailsTab(tabId) {
+  switchView("details");
+  switchTab(tabId);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// ============================================================================
 // Initialization & Defaults Loading
 // ============================================================================
 
@@ -281,7 +356,7 @@ async function initializeApp() {
     await loadTraceability();
     await loadVerification();
   } else {
-    showErrorBanner("Cannot connect to FastAPI backend at http://localhost:8000. Start it with: python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000 --reload");
+    showErrorBanner("Cannot connect to FastAPI backend at http://localhost:8000. Start it in terminal with: python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000 --reload");
   }
 
   // Periodic health check every 10 seconds
@@ -303,9 +378,9 @@ async function loadDefaultsAndSync() {
     const config = await fetchJson("/api/defaults");
     state.defaults = config;
 
-    // Apply values to form controls
     const d = config.defaults;
     if (d) {
+      // Sync Details view controls
       dom.ctrlSource.value = d.source || "synthetic";
       dom.ctrlThreshold.value = d.threshold_bpm || 100;
       dom.ctrlThresholdNum.value = d.threshold_bpm || 100;
@@ -317,12 +392,18 @@ async function loadDefaultsAndSync() {
       const activePct = (d.active_fraction * 100).toFixed(1);
       dom.ctrlActiveFrac.value = activePct;
       dom.ctrlActiveFracNum.value = activePct;
+
+      // Sync Demo view controls
+      dom.demoThreshold.value = d.threshold_bpm || 100;
+      dom.demoThresholdNum.value = d.threshold_bpm || 100;
+      dom.demoActiveFrac.value = activePct;
+      dom.demoActiveFracNum.value = activePct;
+      dom.demoCacheSize.value = d.cache_size_bytes || 4096;
     }
 
-    // Check placeholder warning status
+    // Unverified placeholder flag status
     if (config.placeholders && config.placeholders.energy_parameters) {
-      dom.placeholderBanner.style.display = "block";
-      if (config.placeholders.warning) {
+      if (dom.placeholderBannerText && config.placeholders.warning) {
         dom.placeholderBannerText.textContent = config.placeholders.warning;
       }
     }
@@ -335,6 +416,8 @@ async function loadDefaultsAndSync() {
 function resetToDefaults() {
   if (state.defaults) {
     const d = state.defaults.defaults;
+    const activePct = (d.active_fraction * 100).toFixed(1);
+
     dom.ctrlSource.value = d.source || "synthetic";
     dom.ctrlThreshold.value = d.threshold_bpm || 100;
     dom.ctrlThresholdNum.value = d.threshold_bpm || 100;
@@ -343,11 +426,56 @@ function resetToDefaults() {
     dom.ctrlCacheSize.value = d.cache_size_bytes || 4096;
     dom.ctrlLineSize.value = d.line_size_bytes || 16;
     dom.ctrlAssociativity.value = d.associativity || 1;
-    const activePct = (d.active_fraction * 100).toFixed(1);
     dom.ctrlActiveFrac.value = activePct;
     dom.ctrlActiveFracNum.value = activePct;
+
+    dom.demoThreshold.value = d.threshold_bpm || 100;
+    dom.demoThresholdNum.value = d.threshold_bpm || 100;
+    dom.demoActiveFrac.value = activePct;
+    dom.demoActiveFracNum.value = activePct;
+    dom.demoCacheSize.value = d.cache_size_bytes || 4096;
   }
   hideErrorBanner();
+}
+
+// ============================================================================
+// 1-Click Quick Presets
+// ============================================================================
+
+async function applyPreset(type) {
+  if (type === "normal") {
+    // Normal preset: 75 bpm, threshold 100
+    syncThreshold(100);
+    syncActiveFrac(5.0);
+    syncCacheSize(4096);
+    await runSimulation();
+  } else if (type === "alert") {
+    // Trigger alert preset: threshold 70
+    syncThreshold(70);
+    syncActiveFrac(5.0);
+    syncCacheSize(4096);
+    await runSimulation();
+  }
+}
+
+function syncThreshold(val) {
+  dom.demoThreshold.value = val;
+  dom.demoThresholdNum.value = val;
+  dom.ctrlThreshold.value = val;
+  dom.ctrlThresholdNum.value = val;
+}
+
+function syncActiveFrac(val) {
+  const str = parseFloat(val).toFixed(1);
+  dom.demoActiveFrac.value = str;
+  dom.demoActiveFracNum.value = str;
+  dom.ctrlActiveFrac.value = str;
+  dom.ctrlActiveFracNum.value = str;
+}
+
+function syncCacheSize(val) {
+  dom.demoCacheSize.value = val;
+  dom.ctrlCacheSize.value = val;
 }
 
 // ============================================================================
@@ -355,32 +483,101 @@ function resetToDefaults() {
 // ============================================================================
 
 function setupSliders() {
-  // Synchronize range sliders with number inputs
-  function bindPair(slider, numberInput) {
-    slider.addEventListener("input", () => {
-      numberInput.value = slider.value;
+  // Synchronize Demo controls with Details controls
+  function bindSyncGroup(sliderA, numA, sliderB, numB) {
+    sliderA.addEventListener("input", () => {
+      numA.value = sliderA.value;
+      sliderB.value = sliderA.value;
+      numB.value = sliderA.value;
     });
-    numberInput.addEventListener("input", () => {
-      const val = parseFloat(numberInput.value);
-      const min = parseFloat(slider.min);
-      const max = parseFloat(slider.max);
-      if (!isNaN(val) && val >= min && val <= max) {
-        slider.value = numberInput.value;
+    numA.addEventListener("input", () => {
+      const val = parseFloat(numA.value);
+      if (!isNaN(val)) {
+        sliderA.value = val;
+        sliderB.value = val;
+        numB.value = val;
+      }
+    });
+    sliderB.addEventListener("input", () => {
+      numB.value = sliderB.value;
+      sliderA.value = sliderB.value;
+      numA.value = sliderB.value;
+    });
+    numB.addEventListener("input", () => {
+      const val = parseFloat(numB.value);
+      if (!isNaN(val)) {
+        sliderB.value = val;
+        sliderA.value = val;
+        numA.value = val;
       }
     });
   }
 
-  bindPair(dom.ctrlThreshold, dom.ctrlThresholdNum);
-  bindPair(dom.ctrlDuration, dom.ctrlDurationNum);
-  bindPair(dom.ctrlActiveFrac, dom.ctrlActiveFracNum);
+  bindSyncGroup(dom.demoThreshold, dom.demoThresholdNum, dom.ctrlThreshold, dom.ctrlThresholdNum);
+  bindSyncGroup(dom.demoActiveFrac, dom.demoActiveFracNum, dom.ctrlActiveFrac, dom.ctrlActiveFracNum);
+
+  // Sync cache size dropdowns
+  dom.demoCacheSize.addEventListener("change", () => {
+    dom.ctrlCacheSize.value = dom.demoCacheSize.value;
+  });
+  dom.ctrlCacheSize.addEventListener("change", () => {
+    dom.demoCacheSize.value = dom.ctrlCacheSize.value;
+  });
+
+  // Details duration slider
+  dom.ctrlDuration.addEventListener("input", () => {
+    dom.ctrlDurationNum.value = dom.ctrlDuration.value;
+  });
+  dom.ctrlDurationNum.addEventListener("input", () => {
+    const val = parseFloat(dom.ctrlDurationNum.value);
+    if (!isNaN(val)) dom.ctrlDuration.value = val;
+  });
 }
 
 function setupEventListeners() {
-  // Run simulation button
+  // View switcher buttons
+  dom.btnViewDemo.addEventListener("click", () => switchView("demo"));
+  dom.btnViewDetails.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isExpanded = dom.detailsMenu.classList.toggle("show");
+    dom.btnViewDetails.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+  });
+  dom.btnBackToDemo.addEventListener("click", () => switchView("demo"));
+
+  // Details menu dropdown clicks
+  document.querySelectorAll("[data-tab]").forEach((item) => {
+    item.addEventListener("click", () => {
+      const tabId = item.getAttribute("data-tab");
+      openDetailsTab(tabId);
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!dom.btnViewDetails.contains(e.target) && !dom.detailsMenu.contains(e.target)) {
+      dom.detailsMenu.classList.remove("show");
+      dom.btnViewDetails.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  // 1-Click quick presets
+  dom.btnPresetNormal.addEventListener("click", () => applyPreset("normal"));
+  dom.btnPresetAlert.addEventListener("click", () => applyPreset("alert"));
+
+  // Simulation run buttons
+  dom.btnDemoRun.addEventListener("click", () => runSimulation());
   dom.btnRunSim.addEventListener("click", () => runSimulation());
 
-  // Reset defaults button
+  // Reset defaults buttons
+  dom.btnDemoReset.addEventListener("click", () => resetToDefaults());
   dom.btnResetDefaults.addEventListener("click", () => resetToDefaults());
+
+  // Pipeline step clicks jump to corresponding concept tab in Details
+  dom.pipelineSteps.forEach((step) => {
+    step.addEventListener("click", () => {
+      const targetTab = step.getAttribute("data-tab");
+      if (targetTab) openDetailsTab(targetTab);
+    });
+  });
 
   // Close global error alert
   dom.btnCloseError.addEventListener("click", () => hideErrorBanner());
@@ -390,7 +587,7 @@ function setupEventListeners() {
   dom.chkShowFiltered.addEventListener("change", () => updateChartDatasetVisibility());
   dom.chkShowPeaks.addEventListener("change", () => updateChartDatasetVisibility());
 
-  // Tab switching
+  // Tab switching in Details view
   dom.tabButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       switchTab(btn.getAttribute("aria-controls"));
@@ -407,25 +604,12 @@ function setupEventListeners() {
   dom.btnRetestVerification.addEventListener("click", () => loadVerification());
 
   // Tour controls
-  dom.btnTour.addEventListener("click", () => openTour());
+  if (dom.menuBtnTour) dom.menuBtnTour.addEventListener("click", () => openTour());
   dom.btnTourClose.addEventListener("click", () => closeTour());
   dom.btnTourNext.addEventListener("click", () => tourNext());
   dom.btnTourPrev.addEventListener("click", () => tourPrev());
 
-  // Export dropdown
-  dom.btnExportDropdown.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const isExpanded = dom.exportMenu.classList.toggle("show");
-    dom.btnExportDropdown.setAttribute("aria-expanded", isExpanded ? "true" : "false");
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!dom.btnExportDropdown.contains(e.target)) {
-      dom.exportMenu.classList.remove("show");
-      dom.btnExportDropdown.setAttribute("aria-expanded", "false");
-    }
-  });
-
+  // Export actions
   dom.btnExportJson.addEventListener("click", () => exportSimulationJson());
   dom.btnExportCsv.addEventListener("click", () => exportSignalCsv());
 
@@ -438,16 +622,16 @@ function setupEventListeners() {
 // ============================================================================
 
 async function runSimulation() {
-  const activePercent = parseFloat(dom.ctrlActiveFrac.value);
+  const activePercent = parseFloat(dom.demoActiveFrac.value || dom.ctrlActiveFrac.value);
   const activeFraction = activePercent / 100.0;
 
   const payload = {
-    source: dom.ctrlSource.value,
-    threshold_bpm: parseFloat(dom.ctrlThreshold.value),
-    duration_s: parseFloat(dom.ctrlDuration.value),
-    cache_size_bytes: parseInt(dom.ctrlCacheSize.value, 10),
-    line_size_bytes: parseInt(dom.ctrlLineSize.value, 10),
-    associativity: parseInt(dom.ctrlAssociativity.value, 10),
+    source: dom.ctrlSource.value || "synthetic",
+    threshold_bpm: parseFloat(dom.demoThreshold.value || dom.ctrlThreshold.value),
+    duration_s: parseFloat(dom.ctrlDuration.value || 10.0),
+    cache_size_bytes: parseInt(dom.demoCacheSize.value || dom.ctrlCacheSize.value, 10),
+    line_size_bytes: parseInt(dom.ctrlLineSize.value || 16, 10),
+    associativity: parseInt(dom.ctrlAssociativity.value || 1, 10),
     active_fraction: activeFraction,
   };
 
@@ -461,10 +645,8 @@ async function runSimulation() {
     return;
   }
 
-  // Set loading state
-  dom.btnRunSim.disabled = true;
-  dom.simSpinner.style.display = "inline-block";
-  dom.btnRunText.textContent = "Simulating...";
+  // Set loading states
+  setSimLoading(true);
 
   try {
     const data = await fetchJson("/api/run", {
@@ -476,8 +658,9 @@ async function runSimulation() {
     state.lastResult = data;
     hideErrorBanner();
 
-    // Render all subsystems
+    // Render both Demo & Details subsystems
     renderKPIs(data);
+    renderPipelineStrip(data);
     renderWaveformChart(data);
     renderNumberRepresentation(data);
     renderALU(data);
@@ -486,15 +669,12 @@ async function runSimulation() {
     renderSerial(data);
     renderEnergy(data);
 
-    // Placeholder alert banner check
-    if (data.meta && data.meta.placeholders_in_use) {
-      dom.placeholderBanner.style.display = "block";
-    }
-
   } catch (err) {
     console.error("Simulation run failed:", err);
     let msg = "Simulation failed: ";
-    if (err.status === 422 && err.detail) {
+    if (err.isNetwork) {
+      msg = "Backend server is offline. Please start it with: python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000 --reload";
+    } else if (err.status === 422 && err.detail) {
       if (Array.isArray(err.detail)) {
         msg = "Validation Error: " + err.detail.join("; ");
       } else {
@@ -505,9 +685,68 @@ async function runSimulation() {
     }
     showErrorBanner(msg);
   } finally {
-    dom.btnRunSim.disabled = false;
-    dom.simSpinner.style.display = "none";
-    dom.btnRunText.textContent = "▶ Run Simulation";
+    setSimLoading(false);
+  }
+}
+
+function setSimLoading(isLoading) {
+  dom.btnDemoRun.disabled = isLoading;
+  dom.btnRunSim.disabled = isLoading;
+  dom.btnPresetNormal.disabled = isLoading;
+  dom.btnPresetAlert.disabled = isLoading;
+
+  dom.demoSimSpinner.style.display = isLoading ? "inline-block" : "none";
+  dom.simSpinner.style.display = isLoading ? "inline-block" : "none";
+
+  dom.btnDemoRunText.textContent = isLoading ? "Simulating..." : "▶ Run Simulation";
+  dom.btnRunText.textContent = isLoading ? "Simulating..." : "▶ Run Simulation";
+}
+
+// ============================================================================
+// Horizontal Pipeline Strip Rendering
+// ============================================================================
+
+function renderPipelineStrip(data) {
+  if (!data) return;
+  const last = data.number_repr.last_sample;
+
+  // 1. ADC to Q15
+  if (dom.pipeValQ15) {
+    dom.pipeValQ15.textContent = `ADC: ${last.adc} (${last.adc_hex}) → Q15: ${last.q15_hex}`;
+  }
+
+  // 2. ARM Routine
+  if (dom.pipeValArm) {
+    const matchStr = data.arm.matches_python ? "100% Match" : "Mismatch";
+    dom.pipeValArm.textContent = `Avg: ${last.filtered_hex} (${matchStr})`;
+  }
+
+  // 3. ALU CMP
+  if (dom.pipeFlagsText && dom.pipeBranchText) {
+    const f = data.alu.flags;
+    dom.pipeFlagsText.textContent = `N:${f.N ? 1 : 0} Z:${f.Z ? 1 : 0} C:${f.C ? 1 : 0} V:${f.V ? 1 : 0}`;
+    dom.pipeBranchText.textContent = data.alu.branch_taken ? "BGT: YES (ALERT)" : "BGT: NO";
+    dom.pipeBranchText.style.color = data.alu.branch_taken ? "var(--accent-red)" : "var(--accent-green)";
+  }
+
+  // 4. Cache
+  if (dom.pipeValCache) {
+    const hitPct = (data.cache.hit_rate * 100).toFixed(1);
+    dom.pipeValCache.textContent = `${hitPct}% Hit (${data.cache.amat_cycles.toFixed(2)} cyc)`;
+  }
+
+  // 5. Serial I/O
+  if (dom.pipeValSerial) {
+    const uUtil = data.serial.uart.utilisation_pct.toFixed(1);
+    const iUtil = data.serial.i2c.utilisation_pct.toFixed(1);
+    dom.pipeValSerial.textContent = `UART: ${uUtil}% • I2C: ${iUtil}%`;
+  }
+
+  // 6. Energy
+  if (dom.pipeValEnergy) {
+    const current = data.energy.avg_current_ua.toFixed(1);
+    const saving = data.energy.saving_pct.toFixed(1);
+    dom.pipeValEnergy.textContent = `${current} µA (${saving}% Saved)`;
   }
 }
 
@@ -531,9 +770,9 @@ function renderKPIs(data) {
   const branchTaken = data.alu.branch_taken;
   dom.kpiBranchVal.textContent = branchTaken ? "BGT: YES (ALERT)" : "BGT: NO";
   if (branchTaken) {
-    dom.kpiBranchVal.style.color = "var(--color-danger)";
+    dom.kpiBranchVal.style.color = "var(--accent-red)";
   } else {
-    dom.kpiBranchVal.style.color = "var(--color-success)";
+    dom.kpiBranchVal.style.color = "var(--accent-green)";
   }
 
   const flags = data.alu.flags;
@@ -621,7 +860,7 @@ function renderWaveformChart(data) {
           data: adcData,
           yAxisID: "yADC",
           borderColor: isDark ? "rgba(160, 174, 192, 0.45)" : "rgba(113, 128, 150, 0.45)",
-          borderWidth: 1,
+          borderWidth: 1.5,
           pointRadius: 0,
           borderDash: [3, 3],
           tension: 0.1,
@@ -632,8 +871,8 @@ function renderWaveformChart(data) {
           data: filteredData,
           yAxisID: "yQ15",
           borderColor: "#319795",
-          backgroundColor: isDark ? "rgba(49, 151, 149, 0.12)" : "rgba(49, 151, 149, 0.08)",
-          borderWidth: 2,
+          backgroundColor: isDark ? "rgba(49, 151, 149, 0.15)" : "rgba(49, 151, 149, 0.08)",
+          borderWidth: 2.5,
           pointRadius: 0,
           fill: true,
           tension: 0.2,
@@ -645,11 +884,11 @@ function renderWaveformChart(data) {
           yAxisID: "yQ15",
           type: "line",
           showLine: false,
-          pointRadius: 6,
-          pointHoverRadius: 8,
+          pointRadius: 7,
+          pointHoverRadius: 9,
           pointBackgroundColor: "#e53e3e",
           pointBorderColor: "#ffffff",
-          pointBorderWidth: 1.5,
+          pointBorderWidth: 2,
           hidden: !dom.chkShowPeaks.checked,
         },
       ],
@@ -684,14 +923,14 @@ function renderWaveformChart(data) {
         yQ15: {
           type: "linear",
           position: "left",
-          title: { display: true, text: "Q15 Fixed-Point Amplitude", color: "#319795" },
+          title: { display: true, text: "Q15 Amplitude", color: "#319795" },
           grid: { color: gridColor },
           ticks: { color: textColor },
         },
         yADC: {
           type: "linear",
           position: "right",
-          title: { display: true, text: "Raw 12-bit ADC Integer", color: textColor },
+          title: { display: true, text: "12-bit ADC Integer", color: textColor },
           grid: { drawOnChartArea: false },
           ticks: { color: textColor },
           min: 0,
@@ -988,7 +1227,7 @@ function escapeHtml(str) {
 }
 
 // ============================================================================
-// Tab Navigation Controller
+// Tab Navigation Controller (Details View)
 // ============================================================================
 
 function switchTab(panelId) {
@@ -1168,4 +1407,3 @@ function applyTheme(theme) {
 // ============================================================================
 
 document.addEventListener("DOMContentLoaded", initializeApp);
-
