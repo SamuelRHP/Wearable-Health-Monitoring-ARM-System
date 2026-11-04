@@ -1,11 +1,17 @@
 /**
- * Wearable Health-Monitoring ARM System - Frontend Application
- *
- * Microarchitectural physiological signal monitoring dashboard demonstrating
- * COA concepts: Number representation (Q15), ALU flags, Thumb assembly,
- * SRAM cache hierarchy, UART/I2C serial bus, and duty-cycled energy.
- *
- * Supports independent Demo View (presenter-friendly) and Details View.
+ * Wearable Health-Monitoring ARM System — Interactive COA Dashboard
+ * 
+ * Frontend Client Application
+ * ----------------------------
+ * Integrates directly with the FastAPI backend at http://localhost:8000:
+ * - Default "Demo" landing view for in-person evaluations with 1366x768 projector layout.
+ * - 1-Click quick presets: "Normal (75 bpm, threshold 100)" & "Trigger alert (threshold 70)".
+ * - Real-time horizontal pipeline ribbon tracing all 6 COA stages.
+ * - Full "Details" microarchitecture explorer (7 subsystem tabs, ARM register stepper, verification).
+ * - Real-time REST API integration with /api/health, /api/defaults, /api/run,
+ *   /api/verification, and /api/traceability.
+ * - Dynamic physiological waveform visualization via Chart.js with peak marking.
+ * - WCAG AA accessible, dark/light theme toggle, and client-side JSON/CSV export.
  */
 
 "use strict";
@@ -19,7 +25,7 @@ const state = {
   defaults: null,
   demoResult: null,
   detailsResult: null,
-  lastResult: null, // alias for export
+  lastResult: null,
   demoChartInstance: null,
   detailsChartInstance: null,
   chartInstance: null,
@@ -158,64 +164,85 @@ const dom = {
   aluBranchEval: document.getElementById("alu-branch-eval"),
 
   // Tab 3: ARM Core & Stepper
-  armStepSummary: document.getElementById("arm-step-summary"),
-  armStepTableBody: document.getElementById("arm-step-table-body"),
+  armMatchBadge: document.getElementById("arm-match-badge"),
   btnStepFirst: document.getElementById("btn-step-first"),
   btnStepPrev: document.getElementById("btn-step-prev"),
   btnStepNext: document.getElementById("btn-step-next"),
   btnStepLast: document.getElementById("btn-step-last"),
   stepCounterText: document.getElementById("step-counter-text"),
-  armVerificationStatus: document.getElementById("arm-verification-status"),
+  activeInstrCode: document.getElementById("active-instr-code"),
+  regVals: {
+    r0: document.getElementById("reg-val-r0"),
+    r1: document.getElementById("reg-val-r1"),
+    r2: document.getElementById("reg-val-r2"),
+    r3: document.getElementById("reg-val-r3"),
+    r4: document.getElementById("reg-val-r4"),
+    r5: document.getElementById("reg-val-r5"),
+    r6: document.getElementById("reg-val-r6"),
+    r7: document.getElementById("reg-val-r7"),
+  },
+  regBoxes: {
+    r0: document.getElementById("reg-box-r0"),
+    r1: document.getElementById("reg-box-r1"),
+    r2: document.getElementById("reg-box-r2"),
+    r3: document.getElementById("reg-box-r3"),
+    r4: document.getElementById("reg-box-r4"),
+    r5: document.getElementById("reg-box-r5"),
+    r6: document.getElementById("reg-box-r6"),
+    r7: document.getElementById("reg-box-r7"),
+  },
 
-  // Tab 4: Cache
-  cacheLinesTotal: document.getElementById("cache-lines-total"),
-  cacheOffsetBits: document.getElementById("cache-offset-bits"),
-  cacheIndexBits: document.getElementById("cache-index-bits"),
-  cacheTagBits: document.getElementById("cache-tag-bits"),
-  cacheTotalHits: document.getElementById("cache-total-hits"),
-  cacheTotalMisses: document.getElementById("cache-total-misses"),
-  cacheHitRatePct: document.getElementById("cache-hitrate-pct"),
-  cacheAmatValue: document.getElementById("cache-amat-value"),
-  cacheBarHit: document.getElementById("cache-bar-hit"),
-  cacheBarMiss: document.getElementById("cache-bar-miss"),
+  // Tab 4: Cache Hierarchy
+  bitTagCount: document.getElementById("bit-tag-count"),
+  bitIndexCount: document.getElementById("bit-index-count"),
+  bitOffsetCount: document.getElementById("bit-offset-count"),
+  chunkTag: document.getElementById("chunk-tag"),
+  chunkIndex: document.getElementById("chunk-index"),
+  chunkOffset: document.getElementById("chunk-offset"),
+  cacheHitrateVal: document.getElementById("cache-hitrate-val"),
+  cacheMissrateVal: document.getElementById("cache-missrate-val"),
+  cacheAmatVal: document.getElementById("cache-amat-val"),
 
-  // Tab 5: Serial I/O
-  uartBaudRate: document.getElementById("uart-baud-rate"),
-  uartByteRate: document.getElementById("uart-byte-rate"),
-  uartUtilPct: document.getElementById("uart-util-pct"),
-  uartPacketHex: document.getElementById("uart-packet-hex"),
-  i2cClkFreq: document.getElementById("i2c-clk-freq"),
-  i2cByteRate: document.getElementById("i2c-byte-rate"),
-  i2cDutyPct: document.getElementById("i2c-duty-pct"),
+  // Tab 5: Serial Interconnects
+  uartBaud: document.getElementById("uart-baud"),
+  uartMaxBps: document.getElementById("uart-max-bps"),
+  uartUtil: document.getElementById("uart-util"),
+  i2cClock: document.getElementById("i2c-clock"),
+  i2cLatency: document.getElementById("i2c-latency"),
+  i2cUtil: document.getElementById("i2c-util"),
 
-  // Tab 6: Energy
-  energyActiveCurrent: document.getElementById("energy-active-current"),
-  energySleepCurrent: document.getElementById("energy-sleep-current"),
-  energyAvgCurrent: document.getElementById("energy-avg-current"),
-  energyBaselineCurrent: document.getElementById("energy-baseline-current"),
-  energySavingPct: document.getElementById("energy-saving-pct"),
+  // Tab 6: Duty-Cycle Energy
+  energyTabAvg: document.getElementById("energy-tab-avg"),
+  energyTabBase: document.getElementById("energy-tab-base"),
+  energyTabSavings: document.getElementById("energy-tab-savings"),
   energySourceText: document.getElementById("energy-source-text"),
 
   // Tab 7: Verification Suite
+  verifyQ15Mae: document.getElementById("verify-q15-mae"),
+  verifyQ15Mean: document.getElementById("verify-q15-mean"),
   verifyQ15Rmse: document.getElementById("verify-q15-rmse"),
   verifyQ15Snr: document.getElementById("verify-q15-snr"),
   badgeVerifyQ15: document.getElementById("badge-verify-q15"),
   iconVerifyQ15: document.getElementById("icon-verify-q15"),
+
   verifyArmVectors: document.getElementById("verify-arm-vectors"),
   verifyArmMismatches: document.getElementById("verify-arm-mismatches"),
   badgeVerifyArm: document.getElementById("badge-verify-arm"),
   iconVerifyArm: document.getElementById("icon-verify-arm"),
+
   verifyCacheHits: document.getElementById("verify-cache-hits"),
   verifyCacheHitrate: document.getElementById("verify-cache-hitrate"),
   verifyCacheAmat: document.getElementById("verify-cache-amat"),
   badgeVerifyCache: document.getElementById("badge-verify-cache"),
   iconVerifyCache: document.getElementById("icon-verify-cache"),
+
   btnRetestVerification: document.getElementById("btn-retest-verification"),
+
 
   // Guided Tour Modal
   tourModal: document.getElementById("tour-modal"),
+  tourStepBadge: document.getElementById("tour-step-badge"),
   tourStepTitle: document.getElementById("tour-step-title"),
-  tourStepIndicator: document.getElementById("tour-step-indicator"),
   tourStepBody: document.getElementById("tour-step-body"),
   btnTourClose: document.getElementById("btn-tour-close"),
   btnTourPrev: document.getElementById("btn-tour-prev"),
@@ -223,40 +250,46 @@ const dom = {
 };
 
 // ============================================================================
-// API & Communication Layer
+// API Client Layer
 // ============================================================================
 
+const API_BASE = ""; // Relative path when served statically by FastAPI
+
 async function fetchJson(endpoint, options = {}) {
-  const resp = await fetch(endpoint, options);
-  if (!resp.ok) {
-    let errorDetail = `HTTP ${resp.status} ${resp.statusText}`;
-    try {
-      const errJson = await resp.json();
-      if (errJson && errJson.detail) {
-        if (Array.isArray(errJson.detail)) {
-          errorDetail = errJson.detail.map((d) => `${d.loc ? d.loc.join(".") : ""}: ${d.msg}`).join("; ");
-        } else {
-          errorDetail = String(errJson.detail);
-        }
+  const url = `${API_BASE}${endpoint}`;
+  try {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+      let errorBody = {};
+      try {
+        errorBody = await res.json();
+      } catch (_) {
+        errorBody = { detail: res.statusText };
       }
-    } catch (_) {
-      // Non-JSON response
+      const err = new Error(res.statusText);
+      err.status = res.status;
+      err.detail = errorBody.detail || errorBody;
+      throw err;
     }
-    throw new Error(errorDetail);
+    return await res.json();
+  } catch (error) {
+    if (!error.status) {
+      error.isNetwork = true;
+      error.detail = "Backend connection failed. Ensure the server is running on http://localhost:8000.";
+    }
+    throw error;
   }
-  return await resp.json();
 }
 
+// Check Backend Health
 async function checkHealth() {
   try {
-    const health = await fetchJson("/api/health");
-    if (health && health.status === "ok") {
+    const data = await fetchJson("/api/health");
+    if (data.status === "ok") {
       setBackendStatus(true);
       return true;
     }
-    setBackendStatus(false);
-    return false;
-  } catch (err) {
+  } catch (_) {
     setBackendStatus(false);
     return false;
   }
@@ -266,13 +299,14 @@ function setBackendStatus(online) {
   state.backendOnline = online;
   if (online) {
     dom.backendStatus.className = "status-chip status-online";
-    dom.backendStatusText.textContent = "Backend Connected";
+    dom.backendStatusText.textContent = "Backend Online";
   } else {
     dom.backendStatus.className = "status-chip status-offline";
-    dom.backendStatusText.textContent = "Backend Offline (Port 8000)";
+    dom.backendStatusText.textContent = "Backend Offline";
   }
 }
 
+// Display / Dismiss Error Alerts
 function showErrorBanner(message) {
   dom.globalErrorText.textContent = message;
   dom.globalErrorBanner.style.display = "flex";
@@ -283,7 +317,7 @@ function hideErrorBanner() {
 }
 
 // ============================================================================
-// View Switcher & Tab Navigation
+// View Management (Demo vs Details)
 // ============================================================================
 
 function switchView(viewName) {
@@ -331,19 +365,6 @@ function openDetailsTab(tabId) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function switchTab(tabId) {
-  dom.tabButtons.forEach((btn) => {
-    const isTarget = btn.getAttribute("aria-controls") === tabId;
-    btn.classList.toggle("active", isTarget);
-    btn.setAttribute("aria-selected", isTarget ? "true" : "false");
-  });
-
-  dom.tabPanels.forEach((panel) => {
-    const isTarget = panel.id === tabId;
-    panel.classList.toggle("active", isTarget);
-  });
-}
-
 // ============================================================================
 // Initialization & Defaults Loading
 // ============================================================================
@@ -386,7 +407,7 @@ async function loadDefaultsAndSync() {
 
     const d = config.defaults;
     if (d) {
-      // Set Details view controls
+      // Sync Details view controls
       dom.ctrlSource.value = d.source || "synthetic";
       if (dom.ctrlTargetBpm) {
         dom.ctrlTargetBpm.value = d.target_bpm || 75;
@@ -402,37 +423,48 @@ async function loadDefaultsAndSync() {
       dom.ctrlCacheSize.value = d.cache_size_bytes || 4096;
       dom.ctrlLineSize.value = d.line_size_bytes || 16;
       dom.ctrlAssociativity.value = d.associativity || 1;
-      const actFrac = (d.active_fraction !== undefined ? d.active_fraction * 100.0 : 5.0).toFixed(1);
-      dom.ctrlActiveFrac.value = actFrac;
-      dom.ctrlActiveFracNum.value = actFrac;
+      const activePct = (d.active_fraction * 100).toFixed(1);
+      dom.ctrlActiveFrac.value = activePct;
+      dom.ctrlActiveFracNum.value = activePct;
 
-      // Set Demo view controls independently
+      // Sync Demo view controls
       dom.demoThreshold.value = d.threshold_bpm || 100;
       dom.demoThresholdNum.value = d.threshold_bpm || 100;
-      dom.demoActiveFrac.value = actFrac;
-      dom.demoActiveFracNum.value = actFrac;
+      dom.demoActiveFrac.value = activePct;
+      dom.demoActiveFracNum.value = activePct;
       dom.demoCacheSize.value = d.cache_size_bytes || 4096;
     }
+
+    // Unverified placeholder flag status
+    if (config.placeholders && config.placeholders.energy_parameters) {
+      if (dom.placeholderBannerText && config.placeholders.warning) {
+        dom.placeholderBannerText.textContent = config.placeholders.warning;
+      }
+    }
   } catch (err) {
-    console.warn("Could not load /api/defaults, using hardcoded defaults:", err);
+    console.warn("Failed to load defaults from backend:", err);
   }
 }
 
+// Reset Demo view controls to defaults
 function resetDemoDefaults() {
   if (state.defaults && state.defaults.defaults) {
     const d = state.defaults.defaults;
-    const actFrac = (d.active_fraction !== undefined ? d.active_fraction * 100.0 : 5.0).toFixed(1);
+    const activePct = (d.active_fraction !== undefined ? d.active_fraction * 100.0 : 5.0).toFixed(1);
     dom.demoThreshold.value = d.threshold_bpm || 100;
     dom.demoThresholdNum.value = d.threshold_bpm || 100;
-    dom.demoActiveFrac.value = actFrac;
-    dom.demoActiveFracNum.value = actFrac;
+    dom.demoActiveFrac.value = activePct;
+    dom.demoActiveFracNum.value = activePct;
     dom.demoCacheSize.value = d.cache_size_bytes || 4096;
   }
 }
 
+// Reset Details view controls to defaults
 function resetDetailsDefaults() {
   if (state.defaults && state.defaults.defaults) {
     const d = state.defaults.defaults;
+    const activePct = (d.active_fraction !== undefined ? d.active_fraction * 100.0 : 5.0).toFixed(1);
+
     dom.ctrlSource.value = d.source || "synthetic";
     if (dom.ctrlTargetBpm) {
       dom.ctrlTargetBpm.value = d.target_bpm || 75;
@@ -448,14 +480,22 @@ function resetDetailsDefaults() {
     dom.ctrlCacheSize.value = d.cache_size_bytes || 4096;
     dom.ctrlLineSize.value = d.line_size_bytes || 16;
     dom.ctrlAssociativity.value = d.associativity || 1;
-    const actFrac = (d.active_fraction !== undefined ? d.active_fraction * 100.0 : 5.0).toFixed(1);
-    dom.ctrlActiveFrac.value = actFrac;
-    dom.ctrlActiveFracNum.value = actFrac;
+    dom.ctrlActiveFrac.value = activePct;
+    dom.ctrlActiveFracNum.value = activePct;
   }
 }
 
+function resetToDefaults() {
+  if (state.currentView === "demo") {
+    resetDemoDefaults();
+  } else {
+    resetDetailsDefaults();
+  }
+  hideErrorBanner();
+}
+
 // ============================================================================
-// 1-Click Quick Presets (Demo View Only)
+// 1-Click Quick Presets
 // ============================================================================
 
 async function applyPreset(type) {
@@ -483,30 +523,30 @@ async function applyPreset(type) {
 // ============================================================================
 
 function setupSliders() {
-  function bindPair(slider, num) {
+  function bindSingle(slider, num) {
     if (!slider || !num) return;
     slider.addEventListener("input", () => {
       num.value = slider.value;
     });
     num.addEventListener("input", () => {
       const val = parseFloat(num.value);
-      if (!isNaN(val)) {
-        slider.value = val;
-      }
+      if (!isNaN(val)) slider.value = val;
     });
   }
 
   // Demo controls (independent)
-  bindPair(dom.demoThreshold, dom.demoThresholdNum);
-  bindPair(dom.demoActiveFrac, dom.demoActiveFracNum);
+  bindSingle(dom.demoThreshold, dom.demoThresholdNum);
+  bindSingle(dom.demoActiveFrac, dom.demoActiveFracNum);
 
   // Details controls (independent)
-  bindPair(dom.ctrlThreshold, dom.ctrlThresholdNum);
-  bindPair(dom.ctrlActiveFrac, dom.ctrlActiveFracNum);
-  bindPair(dom.ctrlTargetBpm, dom.ctrlTargetBpmNum);
-  bindPair(dom.ctrlDuration, dom.ctrlDurationNum);
+  bindSingle(dom.ctrlThreshold, dom.ctrlThresholdNum);
+  bindSingle(dom.ctrlActiveFrac, dom.ctrlActiveFracNum);
+  bindSingle(dom.ctrlDuration, dom.ctrlDurationNum);
+  if (dom.ctrlTargetBpm && dom.ctrlTargetBpmNum) {
+    bindSingle(dom.ctrlTargetBpm, dom.ctrlTargetBpmNum);
+  }
 
-  // Toggle Simulated Heart Rate based on source
+  // Toggle Simulated Heart Rate control based on source selection
   if (dom.ctrlSource && dom.grpTargetBpm) {
     dom.ctrlSource.addEventListener("change", () => {
       dom.grpTargetBpm.style.display = (dom.ctrlSource.value === "synthetic") ? "block" : "none";
@@ -528,19 +568,19 @@ function setupEventListeners() {
     });
   });
 
-  // 1-Click quick presets (Demo view)
+  // 1-Click quick presets (Demo View)
   dom.btnPresetNormal.addEventListener("click", () => applyPreset("normal"));
   dom.btnPresetAlert.addEventListener("click", () => applyPreset("alert"));
 
-  // Demo Simulation run and reset buttons
+  // Simulation run buttons (Independent)
   dom.btnDemoRun.addEventListener("click", () => runDemoSimulation());
+  dom.btnRunSim.addEventListener("click", () => runDetailsSimulation());
+
+  // Reset defaults buttons (Independent)
   dom.btnDemoReset.addEventListener("click", async () => {
     resetDemoDefaults();
     await runDemoSimulation();
   });
-
-  // Details Simulation run and reset buttons
-  dom.btnRunSim.addEventListener("click", () => runDetailsSimulation());
   dom.btnResetDefaults.addEventListener("click", async () => {
     resetDetailsDefaults();
     await runDetailsSimulation();
@@ -640,13 +680,13 @@ async function runDemoSimulation() {
     state.lastResult = data;
     hideErrorBanner();
 
-    // Render ONLY Demo elements
+    // Render Demo elements
     renderDemoKPIs(data);
     renderPipelineStrip(data);
     renderDemoWaveformChart(data);
 
   } catch (err) {
-    console.error("Demo simulation execution error:", err);
+    console.error("Demo simulation failed:", err);
     showErrorBanner(`Demo simulation failed: ${err.message}`);
   } finally {
     setDemoLoading(false);
@@ -687,14 +727,15 @@ async function runDetailsSimulation() {
     });
 
     state.detailsResult = data;
+    state.lastResult = data;
     hideErrorBanner();
 
     // Render Details elements
     renderDetailsKPIs(data);
     renderDetailsWaveformChart(data);
     renderNumberRepresentation(data);
-    renderAluFlags(data);
-    renderArmCore(data);
+    renderALU(data);
+    renderARMStepper(data, 0);
     renderCache(data);
     renderSerial(data);
     renderEnergy(data);
@@ -707,7 +748,7 @@ async function runDetailsSimulation() {
     }
 
   } catch (err) {
-    console.error("Details simulation execution error:", err);
+    console.error("Details simulation failed:", err);
     showErrorBanner(`Details simulation failed: ${err.message}`);
   } finally {
     setDetailsLoading(false);
@@ -740,7 +781,6 @@ function setDetailsLoading(isLoading) {
   }
 }
 
-// Backward compatibility alias
 function runSimulation() {
   if (state.currentView === "demo") {
     return runDemoSimulation();
@@ -755,47 +795,50 @@ function runSimulation() {
 
 function renderPipelineStrip(data) {
   if (!data) return;
+  const last = data.number_repr.last_sample;
 
-  // Step 1: ADC -> Q15
-  const rawSample = data.signal.raw_adc[0] || 0;
-  const q15Sample = data.signal.filtered_q15[0] || 0;
+  // 1. ADC to Q15
   if (dom.pipeValQ15) {
-    dom.pipeValQ15.textContent = `0x${q15Sample >= 0 ? q15Sample.toString(16).toUpperCase() : (q15Sample & 0xffff).toString(16).toUpperCase()} (ADC ${rawSample})`;
+    dom.pipeValQ15.textContent = `ADC: ${last.adc} (${last.adc_hex}) → Q15: ${last.q15_hex}`;
   }
 
-  // Step 2: ARM Boxcar Moving Average
+  // 2. ARM Routine
   if (dom.pipeValArm) {
-    dom.pipeValArm.textContent = `${data.arm.instruction_count} Thumb-2 Insns`;
+    const matchStr = data.arm.matches_python ? "100% Match" : "Mismatch";
+    dom.pipeValArm.textContent = `Avg: ${last.filtered_hex} (${matchStr})`;
   }
 
-  // Step 3: ALU Compare & Status Flags
-  const branchTaken = data.alu.branch_taken;
-  const flags = data.alu.flags;
-  const flagStr = `N:${flags.N ? 1 : 0} Z:${flags.Z ? 1 : 0} C:${flags.C ? 1 : 0} V:${flags.V ? 1 : 0}`;
-  if (dom.pipeValAlu) {
-    dom.pipeValAlu.textContent = branchTaken ? "BGT: Alert Active" : "BGT: Normal";
+  // 3. ALU CMP
+  if (dom.pipeFlagsText && dom.pipeBranchText) {
+    const f = data.alu.flags;
+    dom.pipeFlagsText.textContent = `N:${f.N ? 1 : 0} Z:${f.Z ? 1 : 0} C:${f.C ? 1 : 0} V:${f.V ? 1 : 0}`;
+    dom.pipeBranchText.textContent = data.alu.branch_taken ? "BGT: YES (ALERT)" : "BGT: NO";
+    dom.pipeBranchText.style.color = data.alu.branch_taken ? "var(--accent-red)" : "var(--accent-green)";
   }
-  if (dom.pipeFlagsText) dom.pipeFlagsText.textContent = `Flags [${flagStr}]`;
-  if (dom.pipeBranchText) dom.pipeBranchText.textContent = branchTaken ? "Branch: TAKEN" : "Branch: NOT TAKEN";
 
-  // Step 4: SRAM Cache Hierarchy
+  // 4. Cache
   if (dom.pipeValCache) {
-    dom.pipeValCache.textContent = `${(data.cache.hit_rate * 100).toFixed(1)}% Hit (${data.cache.amat_cycles.toFixed(1)} cyc)`;
+    const hitPct = (data.cache.hit_rate * 100).toFixed(1);
+    dom.pipeValCache.textContent = `${hitPct}% Hit (${data.cache.amat_cycles.toFixed(2)} cyc)`;
   }
 
-  // Step 5: Serial Bus I/O
+  // 5. Serial I/O
   if (dom.pipeValSerial) {
-    dom.pipeValSerial.textContent = `UART: ${(data.serial.uart.bus_utilization_pct).toFixed(1)}% | I2C: ${(data.serial.i2c.bus_duty_cycle_pct).toFixed(1)}%`;
+    const uUtil = data.serial.uart.utilisation_pct.toFixed(1);
+    const iUtil = data.serial.i2c.utilisation_pct.toFixed(1);
+    dom.pipeValSerial.textContent = `UART: ${uUtil}% • I2C: ${iUtil}%`;
   }
 
-  // Step 6: Duty-Cycle Energy
+  // 6. Energy
   if (dom.pipeValEnergy) {
-    dom.pipeValEnergy.textContent = `${data.energy.avg_current_ua.toFixed(1)} µA (${data.energy.saving_pct.toFixed(1)}% Saved)`;
+    const current = data.energy.avg_current_ua.toFixed(1);
+    const saving = data.energy.saving_pct.toFixed(1);
+    dom.pipeValEnergy.textContent = `${current} µA (${saving}% Saved)`;
   }
 }
 
 // ============================================================================
-// KPI Cards Rendering (Demo View & Details View)
+// KPI Summary Cards Rendering
 // ============================================================================
 
 function renderDemoKPIs(data) {
@@ -880,7 +923,6 @@ function renderKPIs(data) {
 }
 
 function setFlagChip(elem, active) {
-  if (!elem) return;
   if (active) {
     elem.classList.add("active");
   } else {
@@ -925,47 +967,53 @@ function createOrUpdateChart(canvasElem, isDemo, data) {
   }
 
   const isDark = state.theme === "dark";
-  const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.06)";
-  const textColor = isDark ? "#94a3b8" : "#64748b";
+  const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)";
+  const textColor = isDark ? "#a0aec0" : "#4a5568";
 
   const showAdc = isDemo ? dom.chkShowAdc.checked : (dom.chkDetailsShowAdc ? dom.chkDetailsShowAdc.checked : true);
   const showFiltered = isDemo ? dom.chkShowFiltered.checked : (dom.chkDetailsShowFiltered ? dom.chkDetailsShowFiltered.checked : true);
   const showPeaks = isDemo ? dom.chkShowPeaks.checked : (dom.chkDetailsShowPeaks ? dom.chkDetailsShowPeaks.checked : true);
 
-  return new window.Chart(canvasElem.getContext("2d"), {
+  const ctx = canvasElem.getContext("2d");
+  return new Chart(ctx, {
     type: "line",
     data: {
       labels: timeLabels,
       datasets: [
         {
-          label: "Raw 12-bit ADC",
+          label: "Raw 12-bit ADC [0, 4095]",
           data: adcData,
-          borderColor: isDark ? "#60a5fa" : "#3b82f6",
+          yAxisID: "yADC",
+          borderColor: isDark ? "rgba(160, 174, 192, 0.45)" : "rgba(113, 128, 150, 0.45)",
           borderWidth: 1.5,
           pointRadius: 0,
-          yAxisID: "yADC",
+          borderDash: [3, 3],
+          tension: 0.1,
           hidden: !showAdc,
-          tension: 0.1,
         },
         {
-          label: "Filtered Q15 (ARM Routine)",
+          label: "ARM Filtered Q15 [-32768, 32767]",
           data: filteredData,
-          borderColor: "#0d9488",
-          borderWidth: 2,
-          pointRadius: 0,
           yAxisID: "yQ15",
+          borderColor: "#319795",
+          backgroundColor: isDark ? "rgba(49, 151, 149, 0.15)" : "rgba(49, 151, 149, 0.08)",
+          borderWidth: 2.5,
+          pointRadius: 0,
+          fill: true,
+          tension: 0.2,
           hidden: !showFiltered,
-          tension: 0.1,
         },
         {
-          label: "Detected Systolic Peaks",
+          label: "Systolic Peaks (BPM)",
           data: peakPoints,
-          borderColor: "transparent",
-          backgroundColor: "#e11d48",
-          pointRadius: showPeaks ? 5 : 0,
-          pointHoverRadius: 7,
-          showLine: false,
           yAxisID: "yQ15",
+          type: "line",
+          showLine: false,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointBackgroundColor: "#e53e3e",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 2,
           hidden: !showPeaks,
         },
       ],
@@ -1000,7 +1048,7 @@ function createOrUpdateChart(canvasElem, isDemo, data) {
         yQ15: {
           type: "linear",
           position: "left",
-          title: { display: true, text: "Q15 Amplitude", color: "#0d9488" },
+          title: { display: true, text: "Q15 Amplitude", color: "#319795" },
           grid: { color: gridColor },
           ticks: { color: textColor },
         },
@@ -1057,185 +1105,189 @@ function updateChartDatasetVisibility(isDemo = true) {
   const showFiltered = isDemo ? dom.chkShowFiltered.checked : (dom.chkDetailsShowFiltered ? dom.chkDetailsShowFiltered.checked : true);
   const showPeaks = isDemo ? dom.chkShowPeaks.checked : (dom.chkDetailsShowPeaks ? dom.chkDetailsShowPeaks.checked : true);
 
-  chart.setDatasetVisibility(0, showAdc);
-  chart.setDatasetVisibility(1, showFiltered);
-  chart.setDatasetVisibility(2, showPeaks);
-  chart.getDatasetMeta(2).pointRadius = showPeaks ? 5 : 0;
-  chart.update("none");
+  chart.data.datasets[0].hidden = !showAdc;
+  chart.data.datasets[1].hidden = !showFiltered;
+  chart.data.datasets[2].hidden = !showPeaks;
+  chart.update();
 }
 
 // ============================================================================
-// Concept Subsystems Rendering (Tabs in Details View)
+// Tab 1: Number Representation Rendering
 // ============================================================================
 
-// --- Tab 1: Number Representation ---
 function renderNumberRepresentation(data) {
-  const num = data.number_representation;
-  if (!num) return;
+  const last = data.number_repr.last_sample;
+  dom.numLastAdc.textContent = last.adc;
+  dom.numLastAdcHex.textContent = last.adc_hex;
 
-  dom.numLastAdc.textContent = `${num.last_adc_raw} (${(num.last_adc_raw / 4095.0 * 3.3).toFixed(3)} V)`;
-  dom.numLastAdcHex.textContent = num.last_adc_hex;
+  dom.numLastQ15.textContent = last.q15;
+  dom.numLastQ15Hex.textContent = last.q15_hex;
 
-  dom.numLastQ15.textContent = `${num.last_q15_signed} (${(num.last_q15_signed / 32768.0).toFixed(4)})`;
-  dom.numLastQ15Hex.textContent = num.last_q15_hex;
-
-  dom.numLastFiltered.textContent = `${num.last_filtered_q15} (${(num.last_filtered_q15 / 32768.0).toFixed(4)})`;
-  dom.numLastFilteredHex.textContent = num.last_filtered_hex;
+  dom.numLastFiltered.textContent = last.filtered;
+  dom.numLastFilteredHex.textContent = last.filtered_hex;
 }
 
-// --- Tab 2: ALU & Flags ---
-function renderAluFlags(data) {
-  const alu = data.alu;
-  if (!alu) return;
+// ============================================================================
+// Tab 2: ALU & Flags Rendering
+// ============================================================================
 
-  const flags = alu.flags;
-  setLedFlag(dom.ledFlagN, flags.N);
-  setLedFlag(dom.ledFlagZ, flags.Z);
-  setLedFlag(dom.ledFlagC, flags.C);
-  setLedFlag(dom.ledFlagV, flags.V);
+function renderALU(data) {
+  const flags = data.alu.flags;
+  setLED(dom.ledFlagN, flags.N);
+  setLED(dom.ledFlagZ, flags.Z);
+  setLED(dom.ledFlagC, flags.C);
+  setLED(dom.ledFlagV, flags.V);
 
-  dom.aluResultVal.textContent = alu.cmp_result;
-  dom.aluResultHex.textContent = alu.cmp_result_hex;
+  // Subtraction result
+  const rawRes = data.alu.result;
+  const signedRes = rawRes > 0x7FFFFFFF ? rawRes - 0x100000000 : rawRes;
+  dom.aluResultVal.textContent = `${signedRes >= 0 ? "+" : ""}${signedRes}`;
+  dom.aluResultHex.textContent = "0x" + (rawRes >>> 0).toString(16).toUpperCase().padStart(8, "0");
 
-  if (alu.branch_taken) {
-    dom.aluBranchEval.textContent = `TAKEN -> Heart rate (${alu.bpm}) > Threshold (${alu.threshold}) -> ALERT!`;
-    dom.aluBranchEval.className = "branch-eval-box branch-taken";
-  } else {
-    dom.aluBranchEval.textContent = `NOT TAKEN -> Heart rate (${alu.bpm}) <= Threshold (${alu.threshold}) -> Normal`;
-    dom.aluBranchEval.className = "branch-eval-box branch-not-taken";
-  }
+  // Condition evaluation
+  const taken = data.alu.branch_taken;
+  dom.aluBranchEval.textContent = taken ? "Condition TRUE -> BGT Alert Taken" : "Condition FALSE -> Normal (No Alert)";
+  dom.aluBranchEval.style.color = taken ? "var(--color-danger)" : "var(--color-success)";
 }
 
-function setLedFlag(ledElem, active) {
-  if (!ledElem) return;
+function setLED(elem, active) {
   if (active) {
-    ledElem.classList.add("active");
+    elem.classList.add("active");
   } else {
-    ledElem.classList.remove("active");
+    elem.classList.remove("active");
   }
 }
 
-// --- Tab 3: ARM Core & Stepper ---
-function renderArmCore(data) {
+// ============================================================================
+// Tab 3: ARM Core Instruction Stepper
+// ============================================================================
+
+function renderARMStepper(data, stepIndex = 0) {
   const arm = data.arm;
-  if (!arm) return;
+  if (!arm || !arm.steps || arm.steps.length === 0) return;
 
-  dom.armStepSummary.textContent = `${arm.instruction_count} instructions executed for 4-tap boxcar moving average kernel.`;
+  const totalSteps = arm.steps.length;
+  state.armStepIndex = Math.max(0, Math.min(stepIndex, totalSteps - 1));
+  const currentStep = arm.steps[state.armStepIndex];
+  const prevStep = state.armStepIndex > 0 ? arm.steps[state.armStepIndex - 1] : null;
 
+  // Counter
+  dom.stepCounterText.textContent = `Instruction ${state.armStepIndex + 1} of ${totalSteps}`;
+
+  // Active opcode
+  dom.activeInstrCode.textContent = currentStep.instruction;
+
+  // Bit-exact verification badge
   if (arm.matches_python) {
-    dom.armVerificationStatus.innerHTML = `<span class="badge badge-success">UNIFIED CO-SIMULATION PASS</span> Emulated ARM Thumb output matches Python vector bit-for-bit.`;
+    dom.armMatchBadge.textContent = "100% Bit-Exact Match with Python Reference";
+    dom.armMatchBadge.className = "badge badge-success";
   } else {
-    dom.armVerificationStatus.innerHTML = `<span class="badge badge-alert">MISMATCH DETECTED</span> Emulation divergence.`;
+    dom.armMatchBadge.textContent = "Mismatch with Python Reference";
+    dom.armMatchBadge.className = "badge badge-alert";
   }
 
-  state.armStepIndex = 0;
-  updateArmStepDisplay();
-}
+  // Register grid values and delta highlighting
+  for (let i = 0; i < 8; i++) {
+    const regName = `r${i}`;
+    const val = currentStep.registers[regName] || 0;
+    const hexStr = "0x" + (val >>> 0).toString(16).toUpperCase().padStart(8, "0");
+    dom.regVals[regName].textContent = hexStr;
 
-function updateArmStepDisplay() {
-  const activeData = state.detailsResult || state.demoResult;
-  if (!activeData || !activeData.arm || !activeData.arm.steps) return;
-  const steps = activeData.arm.steps;
-  const total = steps.length;
-  if (total === 0) return;
+    // Highlight changed registers
+    if (prevStep && prevStep.registers[regName] !== val) {
+      dom.regBoxes[regName].classList.add("reg-changed");
+    } else {
+      dom.regBoxes[regName].classList.remove("reg-changed");
+    }
+  }
 
-  const idx = Math.min(Math.max(0, state.armStepIndex), total - 1);
-  state.armStepIndex = idx;
-
-  dom.stepCounterText.textContent = `Step ${idx + 1} of ${total}`;
-
-  dom.btnStepFirst.disabled = idx === 0;
-  dom.btnStepPrev.disabled = idx === 0;
-  dom.btnStepNext.disabled = idx === total - 1;
-  dom.btnStepLast.disabled = idx === total - 1;
-
-  dom.armStepTableBody.innerHTML = "";
-  steps.forEach((step, sIdx) => {
-    const tr = document.createElement("tr");
-    if (sIdx === idx) tr.classList.add("stepper-active-row");
-
-    tr.innerHTML = `
-      <td>${step.step}</td>
-      <td><code>0x${step.pc.toString(16).toUpperCase()}</code></td>
-      <td><strong>${escapeHtml(step.disasm)}</strong></td>
-      <td><code>0x${(step.registers.r0 >>> 0).toString(16).padStart(8, '0').toUpperCase()}</code></td>
-      <td><code>0x${(step.registers.r1 >>> 0).toString(16).padStart(8, '0').toUpperCase()}</code></td>
-      <td><code>0x${(step.registers.r2 >>> 0).toString(16).padStart(8, '0').toUpperCase()}</code></td>
-      <td><code>0x${(step.registers.r3 >>> 0).toString(16).padStart(8, '0').toUpperCase()}</code></td>
-    `;
-    dom.armStepTableBody.appendChild(tr);
-  });
+  // Button disabled states
+  dom.btnStepFirst.disabled = state.armStepIndex === 0;
+  dom.btnStepPrev.disabled = state.armStepIndex === 0;
+  dom.btnStepNext.disabled = state.armStepIndex === totalSteps - 1;
+  dom.btnStepLast.disabled = state.armStepIndex === totalSteps - 1;
 }
 
 function stepARMInstruction(action) {
-  const activeData = state.detailsResult || state.demoResult;
-  if (!activeData || !activeData.arm || !activeData.arm.steps) return;
+  const activeData = state.detailsResult || state.demoResult || state.lastResult;
+  if (!activeData || !activeData.arm) return;
   const total = activeData.arm.steps.length;
 
-  if (action === "first") state.armStepIndex = 0;
-  else if (action === "prev") state.armStepIndex = Math.max(0, state.armStepIndex - 1);
-  else if (action === "next") state.armStepIndex = Math.min(total - 1, state.armStepIndex + 1);
-  else if (action === "last") state.armStepIndex = total - 1;
+  if (action === "first") {
+    state.armStepIndex = 0;
+  } else if (action === "prev") {
+    state.armStepIndex = Math.max(0, state.armStepIndex - 1);
+  } else if (action === "next") {
+    state.armStepIndex = Math.min(total - 1, state.armStepIndex + 1);
+  } else if (action === "last") {
+    state.armStepIndex = total - 1;
+  }
 
-  updateArmStepDisplay();
+  renderARMStepper(state.lastResult, state.armStepIndex);
 }
 
-// --- Tab 4: Cache Hierarchy ---
+// ============================================================================
+// Tab 4: Cache Hierarchy Rendering
+// ============================================================================
+
 function renderCache(data) {
-  const c = data.cache;
-  if (!c) return;
+  const geom = data.cache.geometry;
+  dom.bitTagCount.textContent = geom.tag_bits;
+  dom.bitIndexCount.textContent = geom.index_bits;
+  dom.bitOffsetCount.textContent = geom.offset_bits;
 
-  dom.cacheLinesTotal.textContent = c.num_lines;
-  dom.cacheOffsetBits.textContent = c.offset_bits;
-  dom.cacheIndexBits.textContent = c.index_bits;
-  dom.cacheTagBits.textContent = c.tag_bits;
+  // Dynamically size bit slices according to bit width
+  dom.chunkTag.style.flex = `${geom.tag_bits} 1 0%`;
+  dom.chunkIndex.style.flex = `${geom.index_bits} 1 0%`;
+  dom.chunkOffset.style.flex = `${geom.offset_bits} 1 0%`;
 
-  dom.cacheTotalHits.textContent = c.hits;
-  dom.cacheTotalMisses.textContent = c.misses;
+  const hitRatePct = (data.cache.hit_rate * 100).toFixed(1);
+  const missRatePct = (data.cache.miss_rate * 100).toFixed(1);
 
-  const hitPct = (c.hit_rate * 100).toFixed(1);
-  dom.cacheHitRatePct.textContent = `${hitPct}%`;
-  dom.cacheAmatValue.textContent = `${c.amat_cycles.toFixed(2)} cycles`;
-
-  dom.cacheBarHit.style.width = `${hitPct}%`;
-  dom.cacheBarMiss.style.width = `${(100 - parseFloat(hitPct)).toFixed(1)}%`;
+  dom.cacheHitrateVal.textContent = `${hitRatePct}%`;
+  dom.cacheMissrateVal.textContent = `${missRatePct}%`;
+  dom.cacheAmatVal.textContent = `${data.cache.amat_cycles.toFixed(2)} cyc`;
 }
 
-// --- Tab 5: Serial I/O ---
+// ============================================================================
+// Tab 5: Serial Interconnects Rendering
+// ============================================================================
+
 function renderSerial(data) {
-  const s = data.serial;
-  if (!s) return;
+  const u = data.serial.uart;
+  dom.uartBaud.textContent = u.baud.toLocaleString();
+  dom.uartMaxBps.textContent = u.bytes_per_s.toLocaleString();
+  dom.uartUtil.textContent = `${u.utilisation_pct.toFixed(2)}%`;
 
-  dom.uartBaudRate.textContent = `${s.uart.baud_rate} Baud (bps)`;
-  dom.uartByteRate.textContent = `${s.uart.bytes_per_second} B/s`;
-  dom.uartUtilPct.textContent = `${s.uart.bus_utilization_pct.toFixed(2)}%`;
-  dom.uartPacketHex.textContent = s.uart.sample_packet_hex;
-
-  dom.i2cClkFreq.textContent = `${s.i2c.clock_hz / 1000} kHz`;
-  dom.i2cByteRate.textContent = `${s.i2c.bytes_per_second} B/s`;
-  dom.i2cDutyPct.textContent = `${s.i2c.bus_duty_cycle_pct.toFixed(2)}%`;
+  const i = data.serial.i2c;
+  dom.i2cClock.textContent = (i.clock_hz / 1000).toString();
+  dom.i2cLatency.textContent = i.transaction_us.toFixed(1);
+  dom.i2cUtil.textContent = `${i.utilisation_pct.toFixed(2)}%`;
 }
 
-// --- Tab 6: Duty-Cycle Energy ---
+// ============================================================================
+// Tab 6: Duty-Cycle Energy Rendering
+// ============================================================================
+
 function renderEnergy(data) {
   const e = data.energy;
-  if (!e) return;
+  dom.energyTabAvg.innerHTML = `${e.avg_current_ua.toFixed(1)} <span class="data-unit">&mu;A</span>`;
+  dom.energyTabBase.innerHTML = `${e.always_on_ua.toFixed(1)} <span class="data-unit">&mu;A</span>`;
+  dom.energyTabSavings.textContent = `${e.saving_pct.toFixed(1)}%`;
 
-  dom.energyActiveCurrent.textContent = `${e.active_current_ua.toFixed(1)} µA`;
-  dom.energySleepCurrent.textContent = `${e.sleep_current_ua.toFixed(1)} µA`;
-  dom.energyAvgCurrent.textContent = `${e.avg_current_ua.toFixed(1)} µA`;
-  dom.energyBaselineCurrent.textContent = `${e.baseline_always_on_ua.toFixed(1)} µA`;
-  dom.energySavingPct.textContent = `${e.saving_pct.toFixed(1)}%`;
-  dom.energySourceText.textContent = e.source;
-
-  if (e.placeholder) {
-    dom.placeholderBanner.style.display = "block";
-  } else {
-    dom.placeholderBanner.style.display = "none";
+  if (e.source) {
+    const mcu = e.source.mcu || "STM32L476RG";
+    const doc = e.source.datasheet_doc || "";
+    const run = e.source.run_mode_table || "";
+    const sleep = e.source.sleep_mode_table || "";
+    dom.energySourceText.textContent = `${mcu}: ${doc} (${run}, ${sleep})`;
   }
 }
 
-// --- Tab 7: Verification Suite ---
+// ============================================================================
+// Tab 7: Verification Suite (GET /api/verification)
+// ============================================================================
+
 async function loadVerification() {
   try {
     const data = await fetchJson("/api/verification");
@@ -1243,6 +1295,8 @@ async function loadVerification() {
 
     // 1. Q15 check
     const q15 = data.checks.q15_vs_float;
+    dom.verifyQ15Mae.textContent = q15.max_absolute_error.toExponential(3);
+    dom.verifyQ15Mean.textContent = q15.mean_absolute_error.toExponential(3);
     dom.verifyQ15Rmse.textContent = q15.rmse.toExponential(3);
     dom.verifyQ15Snr.textContent = `${q15.snr_db} dB`;
     setVerifyBadge(dom.badgeVerifyQ15, dom.iconVerifyQ15, q15.passed);
@@ -1286,36 +1340,72 @@ function escapeHtml(str) {
 }
 
 // ============================================================================
-// Guided Tour Controller (5 Short Steps)
+// Tab Navigation Controller (Details View)
+// ============================================================================
+
+function switchTab(panelId) {
+  dom.tabButtons.forEach((btn) => {
+    const isTarget = btn.getAttribute("aria-controls") === panelId;
+    btn.classList.toggle("active", isTarget);
+    btn.setAttribute("aria-selected", isTarget ? "true" : "false");
+  });
+
+  dom.tabPanels.forEach((panel) => {
+    panel.classList.toggle("active", panel.id === panelId);
+  });
+}
+
+// ============================================================================
+// "Start Here" Guided Tour (5 Steps)
 // ============================================================================
 
 const tourSteps = [
   {
-    title: "1. Physiological Signal Acquisition",
-    body: "Photoplethysmography (PPG) waveforms are sampled from an optical sensor over an I2C bus at 125 Hz. Samples are converted into 12-bit unsigned integers (0 to 4095) representing raw arterial blood volume pulses."
+    title: "1. Data Acquisition (Sensors & ADC)",
+    body: `
+      <p>The system acquires physiological Photoplethysmogram (PPG) pulses from optical sensors at 125 Hz.</p>
+      <p>In this simulation, verified clinical data from the <strong>PhysioNet BIDMC Dataset</strong> or a deterministic <strong>Synthetic Generator</strong> models the analog sensor voltage digitized by a 12-bit ADC (range 0 to 4095).</p>
+      <div class="tour-highlight">Key COA Concept: Sensor Interfacing &amp; ADC Digitization</div>
+    `,
   },
   {
-    title: "2. Q15 Fixed-Point Conversion",
-    body: "Because microcontrollers lack double-precision floating point hardware, samples are centered and scaled into signed Q15 format (-1.0 to +0.9999). This represents fractional decimals as 16-bit integers with zero division overhead."
+    title: "2. Number Representation (Signed Q15)",
+    body: `
+      <p>Embedded biomedical microcontrollers lack floating-point units (FPU) to conserve silicon and energy. Real-time arithmetic uses <strong>signed Q15 fixed-point format</strong>.</p>
+      <p>The unsigned 12-bit ADC reading is converted with zero software division overhead: <code>(ADC &minus; 2048) &lt;&lt; 4</code>, mapping midscale to 0 and preserving precision.</p>
+      <div class="tour-highlight">Key COA Concept: Fixed-Point Arithmetic &amp; Two's Complement (CO1)</div>
+    `,
   },
   {
-    title: "3. ARM Thumb-2 Moving Average",
-    body: "An emulated ARM Cortex-M routine loads halfwords from memory, sums adjacent samples with <code>ADDS</code>, and performs an arithmetic right-shift <code>ASRS #2</code> to execute a 4-tap boxcar filter eliminating high-frequency motion artifacts."
+    title: "3. ARM Cortex-M Core & Thumb Instruction Filtering",
+    body: `
+      <p>A 4-sample boxcar moving average filter executes directly on the <strong>Unicorn ARM Emulator</strong> using genuine 16-bit Thumb machine code (<code>asm/moving_average.s</code>).</p>
+      <p>The interactive instruction stepper lets you inspect low registers (R0&ndash;R7) and flags as halfwords are loaded, summed, and scaled by two's complement shifts (<code>ASRS #2</code>).</p>
+      <div class="tour-highlight">Key COA Concept: Thumb Instruction Execution &amp; Register File (CO3)</div>
+    `,
   },
   {
-    title: "4. Hardware Cache & Memory AMAT",
-    body: "Filter memory accesses pass through a simulated L1 SRAM cache. Spatial and temporal locality keep hit rates above 90%, slashing Average Memory Access Time (AMAT) from 20 wait-state cycles down to near 1 cycle."
+    title: "4. ALU Architecture & Alert Decision Branching",
+    body: `
+      <p>The 32-bit Arithmetic Logic Unit evaluates safety conditions using two's complement subtraction: <code>CMP bpm, threshold</code>.</p>
+      <p>The four status flags in the <strong>Application Program Status Register (APSR)</strong> (Negative <code>N</code>, Zero <code>Z</code>, Carry <code>C</code>, Overflow <code>V</code>) drive conditional branch <code>BGT</code> (Branch if Greater Than: <code>Z==0 &amp;&amp; N==V</code>).</p>
+      <div class="tour-highlight">Key COA Concept: 32-bit ALU Architecture &amp; Status Flags (CO2)</div>
+    `,
   },
   {
-    title: "5. ALU Thresholding & Low-Power Telemetry",
-    body: "The calculated heart rate is compared against safety limits using an ALU <code>CMP</code> instruction. When exceeding the threshold, condition flags trigger a branch (BGT) alert, and packets are dispatched over UART while duty-cycling the CPU in sleep mode."
-  }
+    title: "5. Memory Hierarchy (Cache) & Energy Duty Cycling",
+    body: `
+      <p>Circular buffer accesses exhibit strong spatial and temporal locality, yielding &gt;90% cache hit rates and reducing Average Memory Access Time (AMAT) from 20 wait-state cycles to &lt;3 cycles.</p>
+      <p>Between signal bursts, the processor halts oscillators and enters Stop 2 sleep mode. Duty-cycling active execution achieves <strong>&gt;90% energy savings</strong> over continuous operation.</p>
+      <div class="tour-highlight">Key COA Concept: Cache Memory (CO4) &amp; Power-Aware Architecture (CO6)</div>
+    `,
+  },
 ];
 
 function openTour() {
   state.tourCurrentStep = 0;
-  dom.tourModal.style.display = "flex";
   renderTourStep();
+  dom.tourModal.style.display = "flex";
 }
 
 function closeTour() {
@@ -1324,8 +1414,8 @@ function closeTour() {
 
 function renderTourStep() {
   const step = tourSteps[state.tourCurrentStep];
+  dom.tourStepBadge.textContent = `Step ${state.tourCurrentStep + 1} of ${tourSteps.length}`;
   dom.tourStepTitle.textContent = step.title;
-  dom.tourStepIndicator.textContent = `Step ${state.tourCurrentStep + 1} of ${tourSteps.length}`;
   dom.tourStepBody.innerHTML = step.body;
 
   dom.btnTourPrev.disabled = state.tourCurrentStep === 0;
@@ -1349,40 +1439,42 @@ function tourPrev() {
 }
 
 // ============================================================================
-// Data Export (JSON & CSV)
+// Data Export Handlers (JSON & CSV)
 // ============================================================================
 
 function exportSimulationJson() {
   const resultData = state.detailsResult || state.demoResult || state.lastResult;
   if (!resultData) {
-    showErrorBanner("No simulation data available to export. Run a simulation first.");
+    showErrorBanner("No simulation run to export. Run the simulation first.");
     return;
   }
-  const payload = JSON.stringify(resultData, null, 2);
-  downloadBlob(payload, `wearable_sim_${Date.now()}.json`, "application/json");
+  const jsonStr = JSON.stringify(resultData, null, 2);
+  downloadBlob(jsonStr, "wearable_arm_simulation.json", "application/json");
 }
 
 function exportSignalCsv() {
   const resultData = state.detailsResult || state.demoResult || state.lastResult;
   if (!resultData || !resultData.signal) {
-    showErrorBanner("No signal data available to export. Run a simulation first.");
+    showErrorBanner("No signal data to export. Run the simulation first.");
     return;
   }
 
   const sig = resultData.signal;
   const fs = resultData.meta.fs_hz || 125.0;
-  const peaks = new Set(sig.peaks);
+  const peaksSet = new Set(sig.peaks);
 
-  const lines = ["time_s,raw_adc,filtered_q15,is_systolic_peak"];
+  const rows = ["time_s,raw_adc,q15,filtered_q15,is_systolic_peak"];
   for (let i = 0; i < sig.raw_adc.length; i++) {
     const t = (i / fs).toFixed(4);
-    const raw = sig.raw_adc[i];
+    const adc = sig.raw_adc[i];
+    const q15 = sig.q15[i];
     const filt = sig.filtered_q15[i];
-    const isPeak = peaks.has(i) ? 1 : 0;
-    lines.push(`${t},${raw},${filt},${isPeak}`);
+    const isPeak = peaksSet.has(i) ? 1 : 0;
+    rows.push(`${t},${adc},${q15},${filt},${isPeak}`);
   }
 
-  downloadBlob(lines.join("\n"), `wearable_ppg_signal_${Date.now()}.csv`, "text/csv");
+  const csvStr = rows.join("\n");
+  downloadBlob(csvStr, "physiological_ppg_signal.csv", "text/csv;charset=utf-8;");
 }
 
 function downloadBlob(content, filename, mimeType) {
@@ -1398,7 +1490,7 @@ function downloadBlob(content, filename, mimeType) {
 }
 
 // ============================================================================
-// Theme Management (Light & Dark with SVG Icon)
+// Theme Management (Dark / Light Mode)
 // ============================================================================
 
 function setupTheme() {
@@ -1431,7 +1523,8 @@ function applyTheme(theme) {
   }
 }
 
-// Entrypoint initialization on DOM ready
-document.addEventListener("DOMContentLoaded", () => {
-  initializeApp();
-});
+// ============================================================================
+// App Bootstrap
+// ============================================================================
+
+document.addEventListener("DOMContentLoaded", initializeApp);
