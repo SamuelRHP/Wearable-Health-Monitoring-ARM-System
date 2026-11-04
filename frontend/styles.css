@@ -522,10 +522,10 @@ code, pre {
   border-left: 4px solid var(--accent-blue);
 }
 
-#kpi-card-hr { border-left-color: #ec4899; }
-#kpi-card-alu { border-left-color: var(--accent-amber); }
-#kpi-card-cache { border-left-color: var(--accent-blue); }
-#kpi-card-energy { border-left-color: var(--accent-green); }
+#kpi-card-hr, #details-kpi-card-hr { border-left-color: #ec4899; }
+#kpi-card-alu, #details-kpi-card-alu { border-left-color: var(--accent-amber); }
+#kpi-card-cache, #details-kpi-card-cache { border-left-color: var(--accent-blue); }
+#kpi-card-energy, #details-kpi-card-energy { border-left-color: var(--accent-green); }
 
 .kpi-header {
   display: flex;
@@ -1479,6 +1479,11 @@ code, pre {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
+}
+
+.details-kpi-grid {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
 .demo-kpi-grid .kpi-card {
