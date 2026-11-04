@@ -43,7 +43,6 @@ const dom = {
   backendStatusText: document.getElementById("backend-status-text"),
   btnViewDemo: document.getElementById("btn-view-demo"),
   btnViewDetails: document.getElementById("btn-view-details"),
-  detailsMenu: document.getElementById("details-menu"),
   btnBackToDemo: document.getElementById("btn-back-to-demo"),
   panelDemo: document.getElementById("panel-demo"),
   panelDetails: document.getElementById("panel-details"),
@@ -311,8 +310,7 @@ function switchView(viewName) {
     dom.btnViewDemo.classList.add("active");
     dom.btnViewDemo.setAttribute("aria-pressed", "true");
     dom.btnViewDetails.classList.remove("active");
-    dom.btnViewDetails.setAttribute("aria-expanded", "false");
-    dom.detailsMenu.classList.remove("show");
+    dom.btnViewDetails.setAttribute("aria-pressed", "false");
 
     // Re-render chart to adapt dynamically to view container
     if (state.lastResult && state.chartInstance) {
@@ -329,8 +327,7 @@ function switchView(viewName) {
     dom.btnViewDemo.classList.remove("active");
     dom.btnViewDemo.setAttribute("aria-pressed", "false");
     dom.btnViewDetails.classList.add("active");
-    dom.btnViewDetails.setAttribute("aria-expanded", "true");
-    dom.detailsMenu.classList.remove("show");
+    dom.btnViewDetails.setAttribute("aria-pressed", "true");
   }
 }
 
@@ -537,26 +534,15 @@ function setupSliders() {
 function setupEventListeners() {
   // View switcher buttons
   dom.btnViewDemo.addEventListener("click", () => switchView("demo"));
-  dom.btnViewDetails.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const isExpanded = dom.detailsMenu.classList.toggle("show");
-    dom.btnViewDetails.setAttribute("aria-expanded", isExpanded ? "true" : "false");
-  });
+  dom.btnViewDetails.addEventListener("click", () => switchView("details"));
   dom.btnBackToDemo.addEventListener("click", () => switchView("demo"));
 
-  // Details menu dropdown clicks
+  // Pipeline step clicks and any data-tab shortcuts jump to corresponding concept tab in Details
   document.querySelectorAll("[data-tab]").forEach((item) => {
     item.addEventListener("click", () => {
       const tabId = item.getAttribute("data-tab");
-      openDetailsTab(tabId);
+      if (tabId) openDetailsTab(tabId);
     });
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!dom.btnViewDetails.contains(e.target) && !dom.detailsMenu.contains(e.target)) {
-      dom.detailsMenu.classList.remove("show");
-      dom.btnViewDetails.setAttribute("aria-expanded", "false");
-    }
   });
 
   // 1-Click quick presets

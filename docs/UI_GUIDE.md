@@ -25,7 +25,7 @@ When you first open `http://localhost:8000`:
 4. The **Horizontal Pipeline Ribbon** shows live values across all 6 hardware stages from the last run.
 5. The **Four Summary Cards** report heart rate, alert status with ALU flags, cache hit rate with AMAT, and duty-cycled current with energy savings.
 6. The **Waveform Chart** plots the raw 12-bit ADC digitization against the filtered Q15 waveform and highlights detected systolic peaks.
-7. The **`🔍 Details ▾` Menu** gives instant access to all 8 deep-dive concept tabs, the ARM instruction stepper, verification suite, and traceability tables.
+7. The **`🔍 Details View` Button** gives instant direct access to all 8 deep-dive concept tabs, the ARM instruction stepper, verification suite, and traceability tables.
 
 ---
 
@@ -39,7 +39,7 @@ Follow this step-by-step walkthrough when presenting live in person to your teac
 | **2** | **0:20 – 0:40** | **Show Normal Rhythm**<br>Click `⚡ Normal (75 bpm, threshold 100)` | • Controls set: Threshold 100 BPM, Active 5.0%, Cache 4 KB<br>• Waveform displays 12-bit ADC & filtered Q15<br>• Heart Rate: `75 BPM` (`NORMAL` badge)<br>• ALU branch: `BGT: NO`<br>• Cache hit rate: `>99%`<br>• Energy savings: `~95%` | *"At normal resting cardiac rate (~75 BPM), heart rate is safely below our 100 BPM threshold. The ALU computes 75 minus 100, which is negative, so the BGT conditional branch is not taken. Notice our duty cycle: the core sleeps 95% of the time, saving 95% energy."* |
 | **3** | **0:40 – 1:05** | **Trigger Tachycardia Alert**<br>Click `🚨 Trigger alert (thresh 70)` | • Threshold immediately adjusts to 70 BPM<br>• Simulation re-runs in <100 ms<br>• Card turns red: `ALERT (TACHYCARDIA)`<br>• ALU branch switches to `BGT: YES (ALERT)`<br>• APSR flags: `N` clears, `C` asserts (`Z=0, N=V=0`)<br>• Red systolic peak markers remain visible | *"Now I lower the threshold to 70 BPM with one click. The ALU subtraction (75 - 70 = +5) clears the Negative flag and sets Carry. In ARM Cortex-M, condition GT is (Z==0 && N==V), which evaluates to TRUE. The branch is taken and an emergency alert is triggered!"* |
 | **4** | **1:05 – 1:30** | **Explain Pipeline Ribbon**<br>Point to the 6 horizontal steps | • Step 1: `ADC: 2048 → Q15: 0x0000`<br>• Step 2: `ARM Routine (100% Match)`<br>• Step 3: `ALU CMP (APSR Flags & BGT)`<br>• Step 4: `Cache (AMAT: 1.01 cyc vs 20 cyc)`<br>• Step 5: `Serial I/O (UART 8.7% & I2C 6.0%)`<br>• Step 6: `Energy (421 µA, 95% Saved)` | *"This horizontal strip traces the live hardware pipeline across all 6 course outcomes: 12-bit ADC converts to signed Q15 without software division, genuine Thumb instructions execute the 4-tap boxcar filter in Unicorn, ALU flags drive the branch, cache reduces AMAT from 20 to 1 cycle, and serial bus load is under 9%, enabling 95% sleep."* |
-| **5** | **1:30 – 1:55** | **Deep-Dive into Details**<br>Click `🔍 Details ▾` $\to$ `🧠 3. ARM Core & Stepper` | • Switches to Details view<br>• Displays the 18 Thumb instructions in `asm/moving_average.s`<br>• Shows low register file $R0$–$R7$ and APSR flags<br>• Click `Next ▶` to step through instructions | *"If we look under the Details menu, here is our 18-step ARM Thumb assembly debugger running on the Unicorn emulator. We can step through instruction by instruction—loading halfwords with LDRH, sign-extending with SXTH, and arithmetic right shifting with ASRS #2—verifying 100% bit-exact equivalence with Python."* |
+| **5** | **1:30 – 1:55** | **Deep-Dive into Details**<br>Click `🔍 Details View` $\to$ `🧠 3. ARM Core & Stepper` | • Switches to Details view<br>• Displays the 18 Thumb instructions in `asm/moving_average.s`<br>• Shows low register file $R0$–$R7$ and APSR flags<br>• Click `Next ▶` to step through instructions | *"If we click into the Details view, here is our 18-step ARM Thumb assembly debugger running on the Unicorn emulator. We can step through instruction by instruction—loading halfwords with LDRH, sign-extending with SXTH, and arithmetic right shifting with ASRS #2—verifying 100% bit-exact equivalence with Python."* |
 | **6** | **1:55 – 2:00** | **Return to Demo**<br>Click `⬅ Return to Demo View` | • Instantly returns to the clean Demo view<br>• Ready for examiner questions | *"Everything is available under Details, but the main Demo view provides our complete real-time operating picture."* |
 
 ---
@@ -53,7 +53,7 @@ Follow this step-by-step walkthrough when presenting live in person to your teac
   - `● Backend Offline` (Red): Server disconnected; shows guidance to run `python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000 --reload`.
 - **View Switcher:**
   - `🎥 Demo View` (Default): Shows the presenter-friendly view.
-  - `🔍 Details ▾`: Dropdown menu allowing direct access to all 8 COA subsystem concept tabs, Guided Tour, and JSON/CSV data export.
+  - `🔍 Details View`: Direct view button switching to all 8 COA subsystem concept tabs, Guided Tour, and JSON/CSV data export.
 - **🌙 / ☀️ Theme Toggle:** Switches between WCAG AA dark and light color themes, persisting in `localStorage`.
 
 ### 2. Demo View (Presenter Screen)
@@ -95,8 +95,8 @@ Shows the 6 connected hardware stages with live values from the last run:
 
 ---
 
-### 3. Details View (`🔍 Details ▾`)
-Accessible at any time via the header dropdown or pipeline ribbon:
+### 3. Details View (`🔍 Details View`)
+Accessible at any time via the header view switcher or pipeline ribbon:
 - **`⬅ Return to Demo View` Button:** Returns immediately to the presenter screen.
 - **Complete Simulation Parameters:** Full 7 controls (including Signal Source selector and Duration slider).
 - **Tab 1: Number Representation (CO1):** Shows the last sample as raw 12-bit ADC decimal and hex, signed Q15 decimal and hex, and ARM filtered output with worked conversion examples.
@@ -119,7 +119,7 @@ Accessible at any time via the header dropdown or pipeline ribbon:
 | **TC-03** | **1-Click Alert Preset** | Click `🚨 Trigger alert (thresh 70)`. | Controls set: 70 BPM; Alert badge turns red: `ALERT (TACHYCARDIA)`; ALU shows `BGT: YES (ALERT)`; N flag clears, C sets. | [ ] |
 | **TC-04** | **Pipeline Ribbon Update** | Run simulation with different thresholds. | All 6 pipeline stages update with live values matching simulation results. | [ ] |
 | **TC-05** | **Pipeline Step Click-Through** | Click Step 2 (ARM Routine) or Step 4 (Cache) in the pipeline strip. | View switches automatically to Details view and selects that corresponding concept tab. | [ ] |
-| **TC-06** | **Details Menu Dropdown** | Click `🔍 Details ▾` in header; select `🧠 3. ARM Core & Stepper`. | View switches to Details view; Tab 3 activates; 18-step instruction stepper is displayed. | [ ] |
+| **TC-06** | **Details View Navigation** | Click `🔍 Details View` in header. | View switches directly to Details view with all 8 concept tabs, full controls, and topbar actions. | [ ] |
 | **TC-07** | **Return to Demo View** | Click `⬅ Return to Demo View` button in Details view. | Screen returns immediately to Demo view with preserved state. | [ ] |
 | **TC-08** | **Instruction Stepper** | In Tab 3 (ARM Core), click `Next ▶` through all 18 instructions. | Opcode updates; register boxes update in hex; modified registers highlight in accent outline. | [ ] |
 | **TC-09** | **Shrunk Placeholder Chip** | Inspect the Energy card in Demo view. | Unobtrusive `Estimates (placeholder) ℹ️` chip is visible with hover tooltip; no oversized banner pushes content down. | [ ] |
@@ -127,7 +127,7 @@ Accessible at any time via the header dropdown or pipeline ribbon:
 | **TC-11** | **Loading State** | Click `▶ Run Simulation`. | Button shows animated spinner, text changes to `Simulating...`, buttons are temporarily disabled. | [ ] |
 | **TC-12** | **Backend Offline Handling** | Stop uvicorn in terminal, click Run or wait 10s. | Status chip changes to `● Backend Offline`; friendly guidance prompts user to start server in terminal. | [ ] |
 | **TC-13** | **Reset to Defaults** | Change controls, click `🔄 Reset`. | Controls revert to 100 BPM, 5.0%, 4 KB. | [ ] |
-| **TC-14** | **Data Export (JSON & CSV)** | In Details menu, click Export JSON and Export CSV. | `wearable_arm_simulation.json` and `physiological_ppg_signal.csv` download properly. | [ ] |
+| **TC-14** | **Data Export (JSON & CSV)** | In Details view topbar, click Export JSON and Export CSV. | `wearable_arm_simulation.json` and `physiological_ppg_signal.csv` download properly. | [ ] |
 | **TC-15** | **Theme Toggle** | Click `🌙` / `☀️` toggle button in header. | Switches cleanly between dark and light themes; chart gridlines adapt contrast. | [ ] |
 | **TC-16** | **Verification Suite** | Select Tab 7 (Verification). | All 3 automated checks show green `PASSED` status with numerical error bounds. | [ ] |
 | **TC-17** | **Traceability Check** | Select Tab 8 (Traceability). | Syllabus tables display CO1–CO6 and Dimensions; unconfirmed cells show `"To be confirmed from the syllabus"`. | [ ] |

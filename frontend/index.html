@@ -33,25 +33,9 @@
         <button type="button" id="btn-view-demo" class="btn btn-view active" aria-pressed="true" title="Default presenter-friendly overview">
           🎥 Demo View
         </button>
-        <div class="dropdown">
-          <button type="button" id="btn-view-details" class="btn btn-view dropdown-toggle" aria-haspopup="true" aria-expanded="false" title="Explore microarchitectural details, register stepper, and verification">
-            🔍 Details ▾
-          </button>
-          <div class="dropdown-menu" id="details-menu" role="menu">
-            <button class="dropdown-item" type="button" data-tab="tab-num-repr" role="menuitem">🔢 1. Number Repr (Q15)</button>
-            <button class="dropdown-item" type="button" data-tab="tab-alu" role="menuitem">⚙️ 2. ALU &amp; Flags</button>
-            <button class="dropdown-item" type="button" data-tab="tab-arm" role="menuitem">🧠 3. ARM Core &amp; Stepper</button>
-            <button class="dropdown-item" type="button" data-tab="tab-cache" role="menuitem">🗄️ 4. Cache Hierarchy</button>
-            <button class="dropdown-item" type="button" data-tab="tab-serial" role="menuitem">🔌 5. Serial I/O</button>
-            <button class="dropdown-item" type="button" data-tab="tab-energy" role="menuitem">⚡ 6. Duty-Cycle Energy</button>
-            <button class="dropdown-item" type="button" data-tab="tab-verify" role="menuitem">✅ 7. Verification Suite</button>
-            <button class="dropdown-item" type="button" data-tab="tab-trace" role="menuitem">📋 8. Traceability (COs)</button>
-            <div class="dropdown-divider"></div>
-            <button class="dropdown-item" type="button" id="menu-btn-tour" role="menuitem">🗺️ Guided Tour</button>
-            <button class="dropdown-item" type="button" id="btn-export-json" role="menuitem">📄 Export Run (JSON)</button>
-            <button class="dropdown-item" type="button" id="btn-export-csv" role="menuitem">📊 Export Signal (CSV)</button>
-          </div>
-        </div>
+        <button type="button" id="btn-view-details" class="btn btn-view" aria-pressed="false" title="Explore microarchitectural details, register stepper, and verification">
+          🔍 Details View
+        </button>
       </nav>
 
       <!-- Theme Toggle -->
@@ -335,10 +319,23 @@
       
       <!-- Back to Demo View Banner -->
       <div class="details-topbar">
-        <button type="button" id="btn-back-to-demo" class="btn btn-secondary btn-sm" title="Return to the simple presenter Demo view">
-          ⬅ Return to Demo View
-        </button>
-        <span class="details-topbar-title">COA Microarchitectural Deep-Dive &amp; Subsystems Explorer</span>
+        <div class="details-topbar-left">
+          <button type="button" id="btn-back-to-demo" class="btn btn-secondary btn-sm" title="Return to the simple presenter Demo view">
+            ⬅ Return to Demo View
+          </button>
+          <span class="details-topbar-title">COA Microarchitectural Deep-Dive &amp; Subsystems Explorer</span>
+        </div>
+        <div class="details-topbar-actions">
+          <button type="button" id="menu-btn-tour" class="btn btn-secondary btn-sm" title="Start guided tour of the signal path">
+            🗺️ Guided Tour
+          </button>
+          <button type="button" id="btn-export-json" class="btn btn-secondary btn-sm" title="Export complete simulation state as JSON">
+            📄 Export JSON
+          </button>
+          <button type="button" id="btn-export-csv" class="btn btn-secondary btn-sm" title="Export physiological PPG signal as CSV">
+            📊 Export CSV
+          </button>
+        </div>
       </div>
 
       <!-- Full Controls Panel -->
