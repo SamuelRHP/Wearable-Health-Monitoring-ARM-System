@@ -539,9 +539,6 @@
           <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-verify" id="tab-btn-verify">
             <span class="tab-icon">✅</span> 7. Verification
           </button>
-          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-trace" id="tab-btn-trace">
-            <span class="tab-icon">📋</span> 8. Traceability (COs)
-          </button>
         </nav>
 
         <!-- Tab Content Panels -->
@@ -950,51 +947,6 @@
             </div>
           </div>
 
-          <!-- TAB 8: Traceability & Course Outcomes -->
-          <div class="tab-panel" id="tab-trace" role="tabpanel" aria-labelledby="tab-btn-trace">
-            <div class="concept-intro">
-              <h3>Course Outcomes (CO1 &ndash; CO6) &amp; Dimensions (CT + RWE) Traceability</h3>
-              <p>
-                In accordance with project constraints, course outcome descriptions and dimension acronyms are read directly from <code>docs/CO_MAPPING.md</code> and <code>docs/DIMENSION.md</code> without guessing. 
-                Unconfirmed cells display <em>"To be confirmed from the syllabus"</em>.
-              </p>
-            </div>
-
-            <h4>Course Outcomes Coverage (CO1 to CO6)</h4>
-            <div class="table-responsive">
-              <table class="table-trace" id="table-co-mapping">
-                <thead>
-                  <tr>
-                    <th>CO</th>
-                    <th>Official Syllabus Description</th>
-                    <th>COA Concept Demonstrated</th>
-                    <th>Module</th>
-                    <th>Test File</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-co-mapping">
-                  <tr><td colspan="5">Loading traceability data from API...</td></tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h4 style="margin-top: 1.5rem;">Project Evaluation Dimensions (CT + RWE)</h4>
-            <div class="table-responsive">
-              <table class="table-trace" id="table-dimension-mapping">
-                <thead>
-                  <tr>
-                    <th>Dimension</th>
-                    <th>Full Name</th>
-                    <th>Official Rubric Description</th>
-                    <th>How Demonstrated in System</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-dimension-mapping">
-                  <tr><td colspan="4">Loading dimensions from API...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
 
         </div>
       </section>

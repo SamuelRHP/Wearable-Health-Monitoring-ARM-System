@@ -35,7 +35,7 @@ Follow this step-by-step walkthrough when presenting live in person to your teac
 
 - **Dual-View Navigation:**
   - **Demo View (Default):** Clean presenter layout optimized for 1366×768 projectors without vertical scrolling. Shows 3 plain controls, two 1-click presets, a 6-stage hardware pipeline ribbon, 4 summary cards, and the waveform canvas.
-  - **Details View:** Accessible from the `🔍 Details View` button. Houses all 8 COA subsystem concept tabs, full 7-parameter controls, the interactive ARM register stepper, verification cards, traceability tables, guided tour, and JSON/CSV export actions.
+  - **Details View:** Accessible from the `🔍 Details View` button. Houses all 7 COA subsystem concept tabs, full controls, the interactive ARM register stepper, verification cards, guided tour, and JSON/CSV export actions.
 - **Zero Build Step:** Built with standards-compliant HTML5, modern CSS3 (Custom Properties & Flexbox/Grid), and Vanilla ES6+ JavaScript. No Node.js build tools, Webpack, or framework compilation required.
 - **Direct FastAPI Static Mount:** Automatically served at `http://localhost:8000/` by FastAPI's `StaticFiles` middleware in `backend/api.py`.
 - **Strict Hard Constraints Compliance:**
@@ -125,4 +125,3 @@ Accessible at any time via the header view switcher button:
 - **Tab 5: Serial Interconnects (CO5):** Analyzes UART (8-N-1 at 115,200 baud) and I2C (100 kHz Standard Mode) bus timings, frame structures, and channel utilisation.
 - **Tab 6: Duty-Cycle Energy Model (CO6):** Formulates average current draw $I_{\text{avg}} = I_{\text{active}} \times D + I_{\text{sleep}} \times (1 - D)$ using STM32L476RG datasheet values, showing >90% battery savings.
 - **Tab 7: Automated Verification Suite:** Live architectural validation cards querying `GET /api/verification`: Q15 quantization error, ARM emulator vs. Python reference, and Cache simulator vs. hand calculation.
-- **Tab 8: Traceability (CO1–CO6 & Dimensions):** Live rendering of syllabus outcomes and evaluation dimensions directly from `docs/CO_MAPPING.md` and `docs/DIMENSION.md`.

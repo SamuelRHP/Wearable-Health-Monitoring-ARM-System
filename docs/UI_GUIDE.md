@@ -25,7 +25,7 @@ When you first open `http://localhost:8000`:
 4. The **Horizontal Pipeline Ribbon** shows live values across all 6 hardware stages from the last run.
 5. The **Four Summary Cards** report heart rate, alert status with ALU flags, cache hit rate with AMAT, and duty-cycled current with energy savings.
 6. The **Waveform Chart** plots the raw 12-bit ADC digitization against the filtered Q15 waveform and highlights detected systolic peaks.
-7. The **`🔍 Details View` Button** gives instant direct access to all 8 deep-dive concept tabs, the ARM instruction stepper, verification suite, and traceability tables.
+7. The **`🔍 Details View` Button** gives instant direct access to all 7 deep-dive concept tabs, the ARM instruction stepper, and verification suite.
 
 ---
 
@@ -107,7 +107,6 @@ Accessible at any time via the header view switcher or pipeline ribbon:
 - **Tab 5: Serial Interconnects (CO5):** Analyzes UART (8-N-1 at 115,200 baud) and I2C (100 kHz Standard Mode) bus timings, frame structures, and channel utilisation.
 - **Tab 6: Duty-Cycle Energy Model (CO6):** Formulates average current draw $I_{\text{avg}} = I_{\text{active}} \times D + I_{\text{sleep}} \times (1 - D)$ using STM32L476RG datasheet values, showing >90% battery savings.
 - **Tab 7: Automated Verification Suite:** Live architectural validation cards querying `GET /api/verification`: Q15 quantization error, ARM emulator vs. Python reference, and Cache simulator vs. hand calculation.
-- **Tab 8: Traceability (CO1–CO6 & Dimensions):** Live rendering of syllabus outcomes and evaluation dimensions directly from `docs/CO_MAPPING.md` and `docs/DIMENSION.md`.
 
 ---
 
@@ -120,7 +119,7 @@ Accessible at any time via the header view switcher or pipeline ribbon:
 | **TC-03** | **1-Click Alert Preset** | Click `🚨 Trigger alert (thresh 70)`. | Controls set: 70 BPM; Alert badge turns red: `ALERT (TACHYCARDIA)`; ALU shows `BGT: YES (ALERT)`; N flag clears, C sets. | [ ] |
 | **TC-04** | **Pipeline Ribbon Update** | Run simulation with different thresholds. | All 6 pipeline stages update with live values matching simulation results. | [ ] |
 | **TC-05** | **Pipeline Step Click-Through** | Click Step 2 (ARM Routine) or Step 4 (Cache) in the pipeline strip. | View switches automatically to Details view and selects that corresponding concept tab. | [ ] |
-| **TC-06** | **Details View Navigation** | Click `🔍 Details View` in header. | View switches directly to Details view with all 8 concept tabs, full controls, and topbar actions. | [ ] |
+| **TC-06** | **Details View Navigation** | Click `🔍 Details View` in header. | View switches directly to Details view with all 7 concept tabs, full controls, and topbar actions. | [ ] |
 | **TC-07** | **Return to Demo View** | Click `⬅ Return to Demo View` button in Details view. | Screen returns immediately to Demo view with preserved state. | [ ] |
 | **TC-08** | **Instruction Stepper** | In Tab 3 (ARM Core), click `Next ▶` through all 18 instructions. | Opcode updates; register boxes update in hex; modified registers highlight in accent outline. | [ ] |
 | **TC-09** | **Shrunk Placeholder Chip** | Inspect the Energy card in Demo view. | Unobtrusive `Estimates (placeholder) ℹ️` chip is visible with hover tooltip; no oversized banner pushes content down. | [ ] |
@@ -131,5 +130,4 @@ Accessible at any time via the header view switcher or pipeline ribbon:
 | **TC-14** | **Data Export (JSON & CSV)** | In Details view topbar, click Export JSON and Export CSV. | `wearable_arm_simulation.json` and `physiological_ppg_signal.csv` download properly. | [ ] |
 | **TC-15** | **Theme Toggle** | Click `🌙` / `☀️` toggle button in header. | Switches cleanly between dark and light themes; chart gridlines adapt contrast. | [ ] |
 | **TC-16** | **Verification Suite** | Select Tab 7 (Verification). | All 3 automated checks show green `PASSED` status with numerical error bounds. | [ ] |
-| **TC-17** | **Traceability Check** | Select Tab 8 (Traceability). | Syllabus tables display CO1–CO6 and Dimensions; unconfirmed cells show `"To be confirmed from the syllabus"`. | [ ] |
-| **TC-18** | **Keyboard Navigability** | Use `Tab`, `Shift+Tab`, and `Enter`/`Space`. | All buttons, tabs, sliders, and controls display visible `:focus-visible` outlines and operate without mouse. | [ ] |
+| **TC-17** | **Keyboard Navigability** | Use `Tab`, `Shift+Tab`, and `Enter`/`Space`. | All buttons, tabs, sliders, and controls display visible `:focus-visible` outlines and operate without mouse. | [ ] |

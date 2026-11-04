@@ -7,7 +7,7 @@
  * - Default "Demo" landing view for in-person evaluations with 1366x768 projector layout.
  * - 1-Click quick presets: "Normal (75 bpm, threshold 100)" & "Trigger alert (threshold 70)".
  * - Real-time horizontal pipeline ribbon tracing all 6 COA stages.
- * - Full "Details" microarchitecture explorer (8 tabs, ARM register stepper, verification, traceability).
+ * - Full "Details" microarchitecture explorer (7 subsystem tabs, ARM register stepper, verification).
  * - Real-time REST API integration with /api/health, /api/defaults, /api/run,
  *   /api/verification, and /api/traceability.
  * - Dynamic physiological waveform visualization via Chart.js with peak marking.
@@ -30,7 +30,6 @@ const state = {
   armStepIndex: 0,
   tourCurrentStep: 0,
   verificationData: null,
-  traceabilityData: null,
   theme: "dark", // default
   currentView: "demo", // "demo" or "details"
 };
@@ -223,9 +222,6 @@ const dom = {
 
   btnRetestVerification: document.getElementById("btn-retest-verification"),
 
-  // Tab 8: Traceability
-  tbodyCoMapping: document.getElementById("tbody-co-mapping"),
-  tbodyDimensionMapping: document.getElementById("tbody-dimension-mapping"),
 
   // Guided Tour Modal
   tourModal: document.getElementById("tour-modal"),
@@ -366,7 +362,6 @@ async function initializeApp() {
   if (isOnline) {
     await loadDefaultsAndSync();
     await runSimulation();
-    await loadTraceability();
     await loadVerification();
   } else {
     showErrorBanner("Cannot connect to FastAPI backend at http://localhost:8000. Start it in terminal with: python -m uvicorn backend.api:app --host 0.0.0.0 --port 8000 --reload");
@@ -1235,58 +1230,6 @@ function setVerifyBadge(badgeElem, iconElem, passed) {
     badgeElem.className = "verify-status-badge badge-alert";
     iconElem.textContent = "❌";
   }
-}
-
-// ============================================================================
-// Tab 8: Traceability (GET /api/traceability)
-// ============================================================================
-
-async function loadTraceability() {
-  try {
-    const data = await fetchJson("/api/traceability");
-    state.traceabilityData = data;
-
-    // Render CO table
-    dom.tbodyCoMapping.innerHTML = "";
-    if (data.course_outcomes && data.course_outcomes.length > 0) {
-      data.course_outcomes.forEach((row) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><strong>${escapeHtml(row["CO"] || "")}</strong></td>
-          <td>${renderSyllabusNotice(row["Official Syllabus Description"] || "")}</td>
-          <td>${escapeHtml(row["COA Concept Demonstrated"] || "")}</td>
-          <td><code>${escapeHtml(row["Module"] || "")}</code></td>
-          <td><code>${escapeHtml(row["Test File"] || "")}</code></td>
-        `;
-        dom.tbodyCoMapping.appendChild(tr);
-      });
-    }
-
-    // Render Dimension table
-    dom.tbodyDimensionMapping.innerHTML = "";
-    if (data.dimensions && data.dimensions.length > 0) {
-      data.dimensions.forEach((row) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><strong>${escapeHtml(row["Dimension"] || "")}</strong></td>
-          <td>${renderSyllabusNotice(row["Full Name"] || "")}</td>
-          <td>${renderSyllabusNotice(row["Official Rubric Description"] || "")}</td>
-          <td>${escapeHtml(row["How Demonstrated in System"] || "")}</td>
-        `;
-        dom.tbodyDimensionMapping.appendChild(tr);
-      });
-    }
-
-  } catch (err) {
-    console.warn("Failed to load traceability mapping:", err);
-  }
-}
-
-function renderSyllabusNotice(text) {
-  if (!text || text.includes("To be confirmed from the syllabus")) {
-    return `<span class="badge badge-unconfirmed">To be confirmed from the syllabus</span>`;
-  }
-  return escapeHtml(text);
 }
 
 function escapeHtml(str) {
