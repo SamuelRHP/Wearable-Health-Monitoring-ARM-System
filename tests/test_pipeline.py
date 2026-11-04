@@ -108,3 +108,13 @@ def test_run_pipeline_tachycardia_alert():
     assert results["heart_rate"]["bpm"] > 50.0
     assert results["heart_rate"]["alert"] is True
     assert results["alu"]["branch_taken"] is True
+
+
+def test_run_pipeline_custom_target_bpm():
+    """Verify custom target BPM alters the generated synthetic physiological signal."""
+    res_slow = run_pipeline(source="synthetic", target_bpm=55.0, duration_s=10.0)
+    res_fast = run_pipeline(source="synthetic", target_bpm=130.0, duration_s=10.0)
+
+    assert len(res_slow["signal"]["peaks"]) < len(res_fast["signal"]["peaks"])
+    assert res_slow["heart_rate"]["bpm"] < 70.0
+    assert res_fast["heart_rate"]["bpm"] > 115.0

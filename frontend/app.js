@@ -24,9 +24,11 @@ const state = {
   backendOnline: false,
   defaults: null,
   lastResult: null,
+  demoChartInstance: null,
+  detailsChartInstance: null,
+  chartInstance: null,
   armStepIndex: 0,
   tourCurrentStep: 0,
-  chartInstance: null,
   verificationData: null,
   traceabilityData: null,
   theme: "dark", // default
@@ -84,6 +86,9 @@ const dom = {
 
   // Details Form Controls
   ctrlSource: document.getElementById("ctrl-source"),
+  grpTargetBpm: document.getElementById("grp-target-bpm"),
+  ctrlTargetBpm: document.getElementById("ctrl-target-bpm"),
+  ctrlTargetBpmNum: document.getElementById("ctrl-target-bpm-num"),
   ctrlThreshold: document.getElementById("ctrl-threshold"),
   ctrlThresholdNum: document.getElementById("ctrl-threshold-num"),
   ctrlDuration: document.getElementById("ctrl-duration"),
@@ -112,11 +117,15 @@ const dom = {
   kpiSavingsBadge: document.getElementById("kpi-savings-badge"),
   demoEnergyPlaceholderChip: document.getElementById("demo-energy-placeholder-chip"),
 
-  // Chart Canvas & Toggles
+  // Chart Canvas & Toggles (Demo & Details)
   waveformChart: document.getElementById("waveform-chart"),
   chkShowAdc: document.getElementById("chk-show-adc"),
   chkShowFiltered: document.getElementById("chk-show-filtered"),
   chkShowPeaks: document.getElementById("chk-show-peaks"),
+  detailsWaveformChart: document.getElementById("details-waveform-chart"),
+  chkDetailsShowAdc: document.getElementById("chk-details-show-adc"),
+  chkDetailsShowFiltered: document.getElementById("chk-details-show-filtered"),
+  chkDetailsShowPeaks: document.getElementById("chk-details-show-peaks"),
 
   // Tabs Navigation & Panels (Details View)
   tabButtons: document.querySelectorAll(".tab-btn"),
@@ -312,10 +321,10 @@ function switchView(viewName) {
     dom.btnViewDetails.classList.remove("active");
     dom.btnViewDetails.setAttribute("aria-pressed", "false");
 
-    // Re-render chart to adapt dynamically to view container
-    if (state.lastResult && state.chartInstance) {
+    // Re-render chart for Demo view
+    if (state.lastResult) {
       setTimeout(() => {
-        state.chartInstance.resize();
+        renderWaveformChart(state.lastResult);
       }, 50);
     }
   } else if (viewName === "details") {
@@ -328,6 +337,13 @@ function switchView(viewName) {
     dom.btnViewDemo.setAttribute("aria-pressed", "false");
     dom.btnViewDetails.classList.add("active");
     dom.btnViewDetails.setAttribute("aria-pressed", "true");
+
+    // Re-render chart for Details view
+    if (state.lastResult) {
+      setTimeout(() => {
+        renderWaveformChart(state.lastResult);
+      }, 50);
+    }
   }
 }
 
@@ -379,6 +395,13 @@ async function loadDefaultsAndSync() {
     if (d) {
       // Sync Details view controls
       dom.ctrlSource.value = d.source || "synthetic";
+      if (dom.ctrlTargetBpm) {
+        dom.ctrlTargetBpm.value = d.target_bpm || 75;
+        dom.ctrlTargetBpmNum.value = d.target_bpm || 75;
+      }
+      if (dom.grpTargetBpm) {
+        dom.grpTargetBpm.style.display = (dom.ctrlSource.value === "synthetic") ? "block" : "none";
+      }
       dom.ctrlThreshold.value = d.threshold_bpm || 100;
       dom.ctrlThresholdNum.value = d.threshold_bpm || 100;
       dom.ctrlDuration.value = d.duration_s || 10;
@@ -416,6 +439,13 @@ function resetToDefaults() {
     const activePct = (d.active_fraction * 100).toFixed(1);
 
     dom.ctrlSource.value = d.source || "synthetic";
+    if (dom.ctrlTargetBpm) {
+      dom.ctrlTargetBpm.value = d.target_bpm || 75;
+      dom.ctrlTargetBpmNum.value = d.target_bpm || 75;
+    }
+    if (dom.grpTargetBpm) {
+      dom.grpTargetBpm.style.display = (dom.ctrlSource.value === "synthetic") ? "block" : "none";
+    }
     dom.ctrlThreshold.value = d.threshold_bpm || 100;
     dom.ctrlThresholdNum.value = d.threshold_bpm || 100;
     dom.ctrlDuration.value = d.duration_s || 10;
@@ -529,6 +559,24 @@ function setupSliders() {
     const val = parseFloat(dom.ctrlDurationNum.value);
     if (!isNaN(val)) dom.ctrlDuration.value = val;
   });
+
+  // Details target BPM slider
+  if (dom.ctrlTargetBpm && dom.ctrlTargetBpmNum) {
+    dom.ctrlTargetBpm.addEventListener("input", () => {
+      dom.ctrlTargetBpmNum.value = dom.ctrlTargetBpm.value;
+    });
+    dom.ctrlTargetBpmNum.addEventListener("input", () => {
+      const val = parseFloat(dom.ctrlTargetBpmNum.value);
+      if (!isNaN(val)) dom.ctrlTargetBpm.value = val;
+    });
+  }
+
+  // Toggle Simulated Heart Rate control based on source selection
+  if (dom.ctrlSource && dom.grpTargetBpm) {
+    dom.ctrlSource.addEventListener("change", () => {
+      dom.grpTargetBpm.style.display = (dom.ctrlSource.value === "synthetic") ? "block" : "none";
+    });
+  }
 }
 
 function setupEventListeners() {
@@ -568,10 +616,21 @@ function setupEventListeners() {
   // Close global error alert
   dom.btnCloseError.addEventListener("click", () => hideErrorBanner());
 
-  // Chart toggles
-  dom.chkShowAdc.addEventListener("change", () => updateChartDatasetVisibility());
-  dom.chkShowFiltered.addEventListener("change", () => updateChartDatasetVisibility());
-  dom.chkShowPeaks.addEventListener("change", () => updateChartDatasetVisibility());
+  // Chart toggles (Demo View)
+  dom.chkShowAdc.addEventListener("change", () => updateChartDatasetVisibility(true));
+  dom.chkShowFiltered.addEventListener("change", () => updateChartDatasetVisibility(true));
+  dom.chkShowPeaks.addEventListener("change", () => updateChartDatasetVisibility(true));
+
+  // Chart toggles (Details View)
+  if (dom.chkDetailsShowAdc) {
+    dom.chkDetailsShowAdc.addEventListener("change", () => updateChartDatasetVisibility(false));
+  }
+  if (dom.chkDetailsShowFiltered) {
+    dom.chkDetailsShowFiltered.addEventListener("change", () => updateChartDatasetVisibility(false));
+  }
+  if (dom.chkDetailsShowPeaks) {
+    dom.chkDetailsShowPeaks.addEventListener("change", () => updateChartDatasetVisibility(false));
+  }
 
   // Tab switching in Details view
   dom.tabButtons.forEach((btn) => {
@@ -615,6 +674,7 @@ async function runSimulation() {
     source: dom.ctrlSource.value || "synthetic",
     threshold_bpm: parseFloat(dom.demoThreshold.value || dom.ctrlThreshold.value),
     duration_s: parseFloat(dom.ctrlDuration.value || 10.0),
+    target_bpm: parseFloat(dom.ctrlTargetBpm ? dom.ctrlTargetBpm.value : 75.0),
     cache_size_bytes: parseInt(dom.demoCacheSize.value || dom.ctrlCacheSize.value, 10),
     line_size_bytes: parseInt(dom.ctrlLineSize.value || 16, 10),
     associativity: parseInt(dom.ctrlAssociativity.value || 1, 10),
@@ -789,11 +849,8 @@ function setFlagChip(elem, active) {
 // Waveform Chart Controller (Chart.js)
 // ============================================================================
 
-function renderWaveformChart(data) {
-  if (!window.Chart) {
-    console.warn("Chart.js not loaded.");
-    return;
-  }
+function createOrUpdateChart(canvasElem, isDemo, data) {
+  if (!canvasElem || !window.Chart) return null;
 
   const fs = data.meta.fs_hz || 125.0;
   const rawAdc = data.signal.raw_adc;
@@ -801,7 +858,6 @@ function renderWaveformChart(data) {
   const peaks = new Set(data.signal.peaks);
 
   const totalPoints = rawAdc.length;
-  // Subsample if duration > 20s to ensure buttery 60fps rendering
   const stride = totalPoints > 2500 ? Math.ceil(totalPoints / 1250) : 1;
 
   const timeLabels = [];
@@ -815,7 +871,6 @@ function renderWaveformChart(data) {
     adcData.push(rawAdc[i]);
     filteredData.push(filteredQ15[i]);
 
-    // Check if any peak falls within this stride
     let hasPeak = false;
     for (let k = 0; k < stride && (i + k) < totalPoints; k++) {
       if (peaks.has(i + k)) {
@@ -826,17 +881,16 @@ function renderWaveformChart(data) {
     peakPoints.push(hasPeak ? filteredQ15[i] : null);
   }
 
-  // Colors adapted for dark/light themes
   const isDark = state.theme === "dark";
   const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.08)";
   const textColor = isDark ? "#a0aec0" : "#4a5568";
 
-  if (state.chartInstance) {
-    state.chartInstance.destroy();
-  }
+  const showAdc = isDemo ? dom.chkShowAdc.checked : (dom.chkDetailsShowAdc ? dom.chkDetailsShowAdc.checked : true);
+  const showFiltered = isDemo ? dom.chkShowFiltered.checked : (dom.chkDetailsShowFiltered ? dom.chkDetailsShowFiltered.checked : true);
+  const showPeaks = isDemo ? dom.chkShowPeaks.checked : (dom.chkDetailsShowPeaks ? dom.chkDetailsShowPeaks.checked : true);
 
-  const ctx = dom.waveformChart.getContext("2d");
-  state.chartInstance = new Chart(ctx, {
+  const ctx = canvasElem.getContext("2d");
+  return new Chart(ctx, {
     type: "line",
     data: {
       labels: timeLabels,
@@ -850,7 +904,7 @@ function renderWaveformChart(data) {
           pointRadius: 0,
           borderDash: [3, 3],
           tension: 0.1,
-          hidden: !dom.chkShowAdc.checked,
+          hidden: !showAdc,
         },
         {
           label: "ARM Filtered Q15 [-32768, 32767]",
@@ -862,7 +916,7 @@ function renderWaveformChart(data) {
           pointRadius: 0,
           fill: true,
           tension: 0.2,
-          hidden: !dom.chkShowFiltered.checked,
+          hidden: !showFiltered,
         },
         {
           label: "Systolic Peaks (BPM)",
@@ -870,12 +924,12 @@ function renderWaveformChart(data) {
           yAxisID: "yQ15",
           type: "line",
           showLine: false,
-          pointRadius: 7,
-          pointHoverRadius: 9,
+          pointRadius: 6,
+          pointHoverRadius: 8,
           pointBackgroundColor: "#e53e3e",
           pointBorderColor: "#ffffff",
           pointBorderWidth: 2,
-          hidden: !dom.chkShowPeaks.checked,
+          hidden: !showPeaks,
         },
       ],
     },
@@ -927,12 +981,41 @@ function renderWaveformChart(data) {
   });
 }
 
-function updateChartDatasetVisibility() {
-  if (!state.chartInstance) return;
-  state.chartInstance.data.datasets[0].hidden = !dom.chkShowAdc.checked;
-  state.chartInstance.data.datasets[1].hidden = !dom.chkShowFiltered.checked;
-  state.chartInstance.data.datasets[2].hidden = !dom.chkShowPeaks.checked;
-  state.chartInstance.update();
+function renderWaveformChart(data) {
+  if (!window.Chart || !data || !data.signal) return;
+
+  if (state.currentView === "demo") {
+    if (state.demoChartInstance) {
+      state.demoChartInstance.destroy();
+      state.demoChartInstance = null;
+    }
+    if (dom.waveformChart) {
+      state.demoChartInstance = createOrUpdateChart(dom.waveformChart, true, data);
+      state.chartInstance = state.demoChartInstance;
+    }
+  } else {
+    if (state.detailsChartInstance) {
+      state.detailsChartInstance.destroy();
+      state.detailsChartInstance = null;
+    }
+    if (dom.detailsWaveformChart) {
+      state.detailsChartInstance = createOrUpdateChart(dom.detailsWaveformChart, false, data);
+      state.chartInstance = state.detailsChartInstance;
+    }
+  }
+}
+
+function updateChartDatasetVisibility(isDemo = true) {
+  const chart = isDemo ? state.demoChartInstance : state.detailsChartInstance;
+  if (!chart) return;
+  const showAdc = isDemo ? dom.chkShowAdc.checked : (dom.chkDetailsShowAdc ? dom.chkDetailsShowAdc.checked : true);
+  const showFiltered = isDemo ? dom.chkShowFiltered.checked : (dom.chkDetailsShowFiltered ? dom.chkDetailsShowFiltered.checked : true);
+  const showPeaks = isDemo ? dom.chkShowPeaks.checked : (dom.chkDetailsShowPeaks ? dom.chkDetailsShowPeaks.checked : true);
+
+  chart.data.datasets[0].hidden = !showAdc;
+  chart.data.datasets[1].hidden = !showFiltered;
+  chart.data.datasets[2].hidden = !showPeaks;
+  chart.update();
 }
 
 // ============================================================================

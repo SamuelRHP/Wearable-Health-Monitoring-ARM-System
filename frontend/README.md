@@ -116,6 +116,8 @@ frontend/
 
 ### 2. Details View (`🔍 Details View`)
 Accessible at any time via the header view switcher button:
+- **Full Controls Panel:** Configure Signal Source (`Synthetic`, `bidmc01`, `bidmc02`), Simulated Heart Rate (40–180 BPM for synthetic mode), Alert Threshold, Duration (1–60s), Cache parameters, and Duty-cycle Active Fraction.
+- **Dedicated Real-Time Physiological Waveform:** Interactive Chart.js graph rendering 12-bit ADC raw samples, signed Q15 samples, and detected systolic pulse peaks directly inside the Details view, updating live on every run.
 - **Tab 1: Number Representation (CO1):** Shows the last sample as raw 12-bit ADC decimal and hex, signed Q15 decimal and hex, and ARM filtered output with worked conversion examples.
 - **Tab 2: ALU & Status Flags (CO2):** Illustrates how 32-bit subtraction (`CMP bpm, threshold`) sets APSR condition flags (`N`, `Z`, `C`, `V`) with interactive LED indicators and evaluates `BGT` condition `(Z == 0) && (N == V)`.
 - **Tab 3: ARM Core & Registers (CO3):** 18-step interactive stepper through the genuine Thumb moving average routine running in the Unicorn emulator. Inspects low registers `R0`–`R7` with register-change highlighting and verifies 100% bit-exact equivalence with Python.

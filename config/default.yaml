@@ -6,6 +6,7 @@ simulation:
   duration_s: 10.0                # Duration of processed window in seconds
   fs_hz: 125.0                    # Standard sampling frequency (matches PhysioNet BIDMC 125 Hz)
   threshold_bpm: 100.0            # Alert threshold for tachycardia in beats per minute
+  target_bpm: 75.0                # Default simulated heart rate for synthetic generator
 
 cache:
   cache_size_bytes: 4096          # 4 KB cache
@@ -23,6 +24,10 @@ energy:
   active_fraction: 0.05           # 5% processor active duty cycle
 
 validation_ranges:
+  target_bpm:
+    min: 40.0
+    max: 220.0
+    description: "Simulated heart rate in BPM for synthetic generator (40.0 to 220.0 BPM)"
   threshold_bpm:
     min: 40.0
     max: 220.0

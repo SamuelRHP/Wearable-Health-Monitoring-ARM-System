@@ -98,7 +98,8 @@ Shows the 6 connected hardware stages with live values from the last run:
 ### 3. Details View (`🔍 Details View`)
 Accessible at any time via the header view switcher or pipeline ribbon:
 - **`⬅ Return to Demo View` Button:** Returns immediately to the presenter screen.
-- **Complete Simulation Parameters:** Full 7 controls (including Signal Source selector and Duration slider).
+- **Complete Simulation Parameters:** Full controls (Signal Source, Simulated Heart Rate, Alert Threshold, Duration, Cache Size, Line Size, Associativity, Active Core Duty Cycle).
+- **Dedicated Real-Time Physiological Waveform:** Live interactive Chart.js graph rendering 12-bit ADC raw samples, signed Q15 samples, and detected systolic pulse peaks directly inside Details view.
 - **Tab 1: Number Representation (CO1):** Shows the last sample as raw 12-bit ADC decimal and hex, signed Q15 decimal and hex, and ARM filtered output with worked conversion examples.
 - **Tab 2: ALU & Status Flags (CO2):** Illustrates how 32-bit subtraction (`CMP bpm, threshold`) sets APSR condition flags (`N`, `Z`, `C`, `V`) with interactive LED indicators and evaluates `BGT` condition `(Z == 0) && (N == V)`.
 - **Tab 3: ARM Core & Registers (CO3):** 18-step interactive stepper through the genuine Thumb moving average routine running in the Unicorn emulator. Inspects low registers `R0`–`R7` with register-change highlighting and verifies 100% bit-exact equivalence with Python.

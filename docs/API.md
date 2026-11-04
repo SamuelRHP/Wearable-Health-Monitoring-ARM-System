@@ -92,6 +92,7 @@ Run the full-pipeline physiological monitor and return all integrated Computer O
 {
   "source": "synthetic",
   "threshold_bpm": 100.0,
+  "target_bpm": 75.0,
   "cache_size_bytes": 4096,
   "line_size_bytes": 16,
   "associativity": 1,

@@ -105,6 +105,17 @@ class RunSimulationRequest(BaseModel):
         default=10.0,
         description="Window duration in seconds (1.0 to 60.0)",
     )
+    target_bpm: float = Field(
+        default=75.0,
+        description="Simulated target heart rate in beats per minute for synthetic generator (40.0 to 220.0)",
+    )
+
+    @field_validator("target_bpm")
+    @classmethod
+    def validate_target_bpm(cls, v: float) -> float:
+        if v < 40.0 or v > 220.0:
+            raise ValueError("Target BPM must be between 40.0 and 220.0 BPM (physiological limits)")
+        return v
 
     @field_validator("threshold_bpm")
     @classmethod
@@ -172,6 +183,7 @@ def get_defaults() -> dict[str, Any]:
         "defaults": {
             "source": default_data["simulation"]["source"],
             "threshold_bpm": default_data["simulation"]["threshold_bpm"],
+            "target_bpm": default_data["simulation"].get("target_bpm", 75.0),
             "cache_size_bytes": default_data["cache"]["cache_size_bytes"],
             "line_size_bytes": default_data["cache"]["line_size_bytes"],
             "associativity": default_data["cache"]["associativity"],
@@ -207,6 +219,7 @@ def post_run(req: RunSimulationRequest) -> dict[str, Any]:
             associativity=req.associativity,
             active_fraction=req.active_fraction,
             duration_s=req.duration_s,
+            target_bpm=req.target_bpm,
         )
         return results
     except Exception as exc:

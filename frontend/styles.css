@@ -1535,6 +1535,14 @@ code, pre {
   height: 250px;
 }
 
+/* --- Details Chart Card --- */
+.details-chart-card {
+  margin-bottom: 1.25rem;
+}
+.details-chart-container {
+  height: 280px;
+}
+
 /* --- Details Topbar --- */
 .details-topbar {
   display: flex;

@@ -117,8 +117,13 @@ def load_physionet_record(
             # Attempt streaming from PhysioNet BIDMC repository
             record = wfdb.rdrecord(record_name, pn_dir="bidmc/1.0.0")
 
-        if record is not None and "PLETH" in record.sig_name:
-            channel_idx = record.sig_name.index("PLETH")
+        matching_channels = [
+            i for i, name in enumerate(record.sig_name)
+            if "PLETH" in name.upper()
+        ] if (record is not None and getattr(record, "sig_name", None)) else []
+
+        if matching_channels:
+            channel_idx = matching_channels[0]
             raw_floats = record.p_signal[:, channel_idx]
             native_fs = float(record.fs)
 
@@ -216,6 +221,7 @@ def run_pipeline(
     active_fraction: float = 0.05,
     duration_s: float = 10.0,
     fs_hz: float = 125.0,
+    target_bpm: float = 75.0,
 ) -> dict[str, Any]:
     """Execute the full integrated COA simulation pipeline.
 
@@ -229,7 +235,7 @@ def run_pipeline(
         norm_floats, raw_adcs = generate_synthetic_ppg(
             duration_s=duration_s,
             fs_hz=fs_hz,
-            target_bpm=75.0,
+            target_bpm=target_bpm,
         )
     else:
         norm_floats, raw_adcs, fetch_warnings = load_physionet_record(

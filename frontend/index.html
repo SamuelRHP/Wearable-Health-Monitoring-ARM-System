@@ -362,6 +362,22 @@
               <small class="form-hint">PhysioNet BIDMC (125 Hz) or Synthetic</small>
             </div>
 
+            <!-- Simulated Heart Rate (for Synthetic mode) -->
+            <div class="form-group" id="grp-target-bpm">
+              <label for="ctrl-target-bpm" class="form-label" title="Simulated patient resting heart rate for synthetic signal generator">
+                Simulated Heart Rate:
+                <span class="info-tooltip" tabindex="0" aria-label="Controls the pulse frequency of the synthetic physiological signal generator (40 to 180 BPM).">ℹ️</span>
+              </label>
+              <div class="slider-container">
+                <input type="range" id="ctrl-target-bpm" min="40" max="180" step="1" value="75" class="form-range" aria-valuemin="40" aria-valuemax="180">
+                <div class="slider-value-display">
+                  <input type="number" id="ctrl-target-bpm-num" min="40" max="180" value="75" class="form-input-number">
+                  <span class="unit">BPM</span>
+                </div>
+              </div>
+              <small class="form-hint">Patient pulse rate (Synthetic mode)</small>
+            </div>
+
             <!-- Alert Threshold (BPM) -->
             <div class="form-group">
               <label for="ctrl-threshold" class="form-label" title="Safety threshold in beats per minute triggering ARM ALU alert branch">
@@ -477,6 +493,24 @@
             </button>
           </div>
         </form>
+      </section>
+
+      <!-- Real-Time Physiological Waveform (Details View) -->
+      <section class="card chart-card details-chart-card" aria-labelledby="details-chart-heading">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h2 id="details-chart-heading" class="card-title">📈 Real-Time Physiological Waveform &amp; Signal Processing</h2>
+            <span class="chart-subtitle">Raw 12-bit ADC &bull; Signed Q15 &bull; ARM Cortex-M 4-tap boxcar filter &bull; Detected systolic pulse peaks</span>
+          </div>
+          <div class="chart-legend-toggles">
+            <label class="toggle-control"><input type="checkbox" id="chk-details-show-adc" checked> <span>Raw 12-bit ADC</span></label>
+            <label class="toggle-control"><input type="checkbox" id="chk-details-show-filtered" checked> <span>ARM Filtered (Q15)</span></label>
+            <label class="toggle-control"><input type="checkbox" id="chk-details-show-peaks" checked> <span>Systolic Peaks</span></label>
+          </div>
+        </div>
+        <div class="chart-container details-chart-container">
+          <canvas id="details-waveform-chart" aria-label="Interactive physiological waveform graph in Details view showing raw ADC signal, filtered Q15 signal, and detected systolic peaks"></canvas>
+        </div>
       </section>
 
       <!-- Tabbed COA Subsystem Explanations & Live Data -->

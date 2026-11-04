@@ -119,6 +119,12 @@ def test_api_run_validation_errors(client):
     assert resp.status_code == 422
     assert "Duration must be between 1.0 and 60.0 seconds" in str(resp.json())
 
+    # Target BPM out of range
+    bad_target_bpm = {"target_bpm": 300.0}
+    resp = client.post("/api/run", json=bad_target_bpm)
+    assert resp.status_code == 422
+    assert "Target BPM must be between 40.0 and 220.0 BPM" in str(resp.json())
+
 
 def test_api_verification(client):
     """Verify GET /api/verification runs all 3 automated checks and reports all passed."""
